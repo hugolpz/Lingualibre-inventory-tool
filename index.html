@@ -125,6 +125,12 @@
     <div class="container">
         <h1>Filtered Lists from Lingua Libre Namespaces</h1>
         
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button id="open-namespace-manager" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em;">
+                📊 Manage Namespace Data
+            </button>
+        </div>
+        
         <div id="loading" class="loading">Loading data...</div>
         
         <div id="content" style="display: none;">
@@ -150,6 +156,7 @@
     </div>
 
     <!-- Load all JS files -->
+    <script src="js/listing.js"></script>
     <script src="js/user.js"></script>
     <script src="js/help.js"></script>
     <script src="js/lingualibre.js"></script>
@@ -492,11 +499,20 @@
                     `<div class="error">Error loading data: ${error.message}<br>Check console for details.</div>`;
             }
         }
+        
+        // Expose processData globally so it can be called from listing.js
+        window.processData = processData;
 
         // Start processing when page loads
         document.addEventListener('DOMContentLoaded', () => {
             // Small delay to ensure all scripts are fully loaded
             setTimeout(processData, 100);
+            
+            // Connect the namespace manager button
+            const namespaceBtn = document.getElementById('open-namespace-manager');
+            if (namespaceBtn && typeof window.openNamespaceManager === 'function') {
+                namespaceBtn.addEventListener('click', window.openNamespaceManager);
+            }
         });
     </script>
 </body>
