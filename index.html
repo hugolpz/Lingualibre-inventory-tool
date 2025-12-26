@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtered Lists Display</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .stats { display: flex; justify-content: space-around; margin-bottom: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 1.5em; font-weight: bold; color: #007bff; }
+        .stat-label { color: #666; font-size: 0.9em; }
+        .section { margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 5px; overflow: hidden; }
+        
+        /* Table-like structure */
+        .section-header,
+        .section-stats,
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+        }
+        
+        .section-stats {
+            background: #e9ecef;
+            padding: 10px 15px;
+            font-size: 0.9em;
+        }
+        
+        .list-container {
+            background: #f8f9fa;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .list-item {
+            padding: 8px 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        
+        .list-item:nth-child(even) { background: white; }
+        .list-item:hover { background: #e9ecef; }
+        .list-item:last-child { border-bottom: none; }
+        
+        /* Column widths - consistent across header and rows */
+        .section-header span:nth-child(1),
+        .section-stats span:nth-child(1),
+        .list-item span:nth-child(1) {
+            width: 100px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        
+        .section-header span:nth-child(2),
+        .section-stats span:nth-child(2),
+        .list-item span:nth-child(2) {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .section-header span:nth-child(3),
+        .section-stats span:nth-child(3),
+        .list-item span:nth-child(3) {
+            width: 120px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        
+        /* Specific styling for header columns */
+        .col-title {
+            font-weight: bold;
+        }
+        
+        .isOnCommons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        .check-existence-btn {
+            background: white;
+            color: #007bff;
+            border: 1px solid white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+        
+        .check-existence-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .check-existence-btn:disabled {
+            cursor: wait;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Filtered Lists from Lingua Libre Namespaces</h1>
+        
+        <div id="loading" class="loading">Loading data...</div>
+        
+        <div id="content" style="display: none;">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number" id="total-original">0</div>
+                    <div class="stat-label">Total Original</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="total-removed">0</div>
+                    <div class="stat-label">Total Filtered Out</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="total-filtered">0</div>
+                    <div class="stat-label">Total Kept</div>
+                </div>
+            </div>
+            
+            <div id="sections-container">
+                <!-- Sections will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Load all JS files -->
+    <script src="js/user.js"></script>
+    <script src="js/help.js"></script>
+    <script src="js/lingualibre.js"></script>
+    <script src="js/template.js"></script>
+    <script src="js/list.js"></script>
+    <script src="js/category.js"></script>
+    <script src="js/translations.js"></script>
+    <script>
+        // Page existence checker with caching and throttling
+        const PageExistenceChecker = {
+            cache: new Map(),
+            queue: [],
+            isProcessing: false,
+            batchSize: 50, // Check 50 pages per API call
+            delayBetweenBatches: 1000, // 1 second between batches
+            
+            // Check if a page exists (returns promise)
+            async check(pageTitle) {
+                // Return cached result if available
+                if (this.cache.has(pageTitle)) {
+                    return this.cache.get(pageTitle);
+                }
+                
+                // Add to queue and process
+                return new Promise((resolve) => {
+                    this.queue.push({ pageTitle, resolve });
+                    this.processBatch();
+                });
+            },
+            
+            // Process queued requests in batches
+            async processBatch() {
+                if (this.isProcessing || this.queue.length === 0) {
+                    return;
+                }
+                
+                this.isProcessing = true;
+                
+                // Take a batch from the queue
+                const batch = this.queue.splice(0, this.batchSize);
+                const titles = batch.map(item => item.pageTitle);
+                
+                try {
+                    // Make API request for the batch
+                    const results = await this.queryAPI(titles);
+                    
+                    // Resolve all promises in the batch
+                    batch.forEach(item => {
+                        const exists = results[item.pageTitle] || false;
+                        this.cache.set(item.pageTitle, exists);
+                        item.resolve(exists);
+                    });
+                } catch (error) {
+                    console.error('Error checking page existence:', error);
+                    // On error, resolve all as false
+                    batch.forEach(item => {
+                        this.cache.set(item.pageTitle, false);
+                        item.resolve(false);
+                    });
+                }
+                
+                this.isProcessing = false;
+                
+                // If there are more items in queue, process them after delay
+                if (this.queue.length > 0) {
+                    setTimeout(() => this.processBatch(), this.delayBetweenBatches);
+                }
+            },
+            
+            // Query the MediaWiki API
+            async queryAPI(titles) {
+                const url = new URL('https://commons.wikimedia.org/w/api.php');
+                url.searchParams.set('action', 'query');
+                url.searchParams.set('format', 'json');
+                url.searchParams.set('origin', '*');
+                url.searchParams.set('titles', titles.join('|'));
+                url.searchParams.set('prop', 'info');
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const results = {};
+                
+                if (data.query && data.query.pages) {
+                    for (const pageId in data.query.pages) {
+                        const page = data.query.pages[pageId];
+                        // Page exists if pageId is not negative
+                        results[page.title] = parseInt(pageId) > 0;
+                    }
+                }
+                
+                return results;
+            },
+            
+            // Synchronous version that returns cached value or '?' for pending
+            checkSync(pageTitle) {
+                if (this.cache.has(pageTitle)) {
+                    return this.cache.get(pageTitle);
+                }
+                // Trigger async check
+                this.check(pageTitle);
+                return null; // Unknown, check in progress
+            }
+        };
+        
+        // Wrapper function for ease of use
+        function existsOnWiki(pageTitle) {
+            const result = PageExistenceChecker.checkSync(pageTitle);
+            if (result === null) {
+                return '⏳'; // Pending/checking
+            }
+            return result;
+        }
+        
+        // Configuration for namespace files
+        const NAMESPACE_CONFIG = [
+            { ns: 'user', name: 'User:*' },
+            { ns: 'help', name: 'Help:*' },
+            { ns: 'lingualibre', name: 'LinguaLibre:*' },
+            { ns: 'list', name: 'List:*' },
+            { ns: 'category', name: 'Category:*' },
+            { ns: 'template', name: 'Template:*' },
+            { ns: 'template_root', name: 'Template:* roots' },
+            { ns: 'translations', name: 'Translations:*' },
+            { ns: 'translations_root', name: 'Translations:* roots' },
+        ];
+
+        // Prepare template_root data
+        window.template_root = {
+            cleaner : window['template'].cleaner,
+            list : [...new Set(window['template'].list.map(item => item.split('/')[0]) )]
+        }
+        // Prepare translations_root data
+        window.translations_root = {
+            cleaner : window['translations'].cleaner,
+            list : [...new Set(window['translations'].list.map(item => item.split('/')[0]) )]
+        }
+        // Safe cleaner function wrapper
+        function safeCleaner(inputList, cleanerFunction) {
+            try {
+                if (typeof cleanerFunction !== 'function') {
+                    console.warn('Cleaner is not a function, returning original list');
+                    return inputList;
+                }
+                
+                const result = cleanerFunction(inputList);
+                
+                if (!Array.isArray(result)) {
+                    console.warn('Cleaner function did not return an array, returning original list');
+                    return inputList;
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('Error in cleaner function:', error);
+                return inputList;
+            }
+        }
+
+        // Create section HTML
+        function createSection(name, originalCount, filteredCount, filteredItems) {
+            const removedCount = originalCount - filteredCount;
+            const removalPercentage = originalCount > 0 ? ((removedCount / originalCount) * 100).toFixed(1) : 0;
+            const sectionId = `section-${name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+            
+            return `
+                <div class="section" id="${sectionId}">
+                    <div class="section-header">
+                        <span class="isOnCommons col-title">
+                            <button class="check-existence-btn" data-section="${sectionId}">
+                                <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/>
+                            </button>
+                        </span>
+                        <span class="pageName col-title">${name}</span>
+                        <span class="col-title">Status</span>
+                    </div>
+                    <div class="section-stats">
+                        <span></span>
+                        <span>Original: ${originalCount} | Filtered: ${removedCount} | Kept: ${filteredCount}</span>
+                        <span style="opacity: 0.8;">
+                            ${removalPercentage}% out
+                        </span>
+                    </div>
+                    <div class="list-container">
+                        ${filteredItems.length > 0 
+                            ? filteredItems.map(item => `<div class="list-item"><span class="isOnCommons" data-page="${item}">-</span><span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span><span></span></div>`).join('')
+                            : '<div class="list-item" style="font-style: italic; color: #666;"><span></span><span>No items remaining after filtering</span><span></span></div>'
+                        }
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update existence indicators for a specific section
+        async function updateSectionExistence(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            
+            const button = section.querySelector('.check-existence-btn');
+            const indicators = section.querySelectorAll('.isOnCommons[data-page]');
+            
+            if (!indicators.length) return;
+            
+            // Update button state
+            button.disabled = true;
+            button.innerHTML = '<img src="./assets/commons.svg" alt="Checking..." style="width:16px;height:16px; animation: spin 1s linear infinite;"/>';
+            button.style.cursor = 'wait';
+            
+            const totalCount = indicators.length;
+            let checkedCount = 0;
+            
+            // Set all to pending immediately
+            indicators.forEach(indicator => {
+                indicator.textContent = '⏳';
+            });
+            
+            // Queue all checks at once (this triggers batch processing)
+            const checkPromises = Array.from(indicators).map(async (indicator) => {
+                const pageTitle = indicator.getAttribute('data-page');
+                if (pageTitle) {
+                    const exists = await PageExistenceChecker.check(pageTitle);
+                    indicator.textContent = exists ? '✅' : '❌';
+                    
+                    checkedCount++;
+                    button.textContent = `${checkedCount}/${totalCount}`;
+                }
+            });
+            
+            // Wait for all checks to complete
+            await Promise.all(checkPromises);
+            
+            // Update button to show completion
+            button.textContent = '✓ Done';
+            button.style.background = '#28a745';
+            button.style.color = 'white';
+            button.style.borderColor = '#28a745';
+        }
+        
+        // Update existence indicators asynchronously
+        async function updateExistenceIndicators() {
+            const indicators = document.querySelectorAll('.isOnCommons');
+            
+            for (const indicator of indicators) {
+                const pageTitle = indicator.getAttribute('data-page');
+                if (pageTitle) {
+                    // Check existence (this will use cache or queue the request)
+                    const exists = await PageExistenceChecker.check(pageTitle);
+                    indicator.textContent = exists ? '✅' : '❌';
+                }
+            }
+        }
+
+        // Process namespace data
+        function processNamespace(config) {
+            // Get data object from window
+            const dataObj = window[config.ns];
+            
+            if (!dataObj) {
+                console.warn(`${config.name}: Data object not found`);
+                return null;
+            }
+            
+            if (!Array.isArray(dataObj.list)) {
+                console.warn(`${config.name}: Invalid or missing list array`);
+                return null;
+            }
+            
+            if (typeof dataObj.cleaner !== 'function') {
+                console.warn(`${config.name}: Invalid or missing cleaner function`);
+                return null;
+            }
+            
+            const originalList = dataObj.list;
+            const filteredList = safeCleaner(originalList, dataObj.cleaner);
+            
+            return {
+                name: config.name,
+                original: originalList.length,
+                filtered: filteredList,
+                filteredCount: filteredList.length
+            };
+        }
+
+        // Main processing function
+        function processData() {
+            try {
+                const sections = [];
+                let totalOriginal = 0;
+                let totalFiltered = 0;
+
+                // Process each namespace
+                for (const config of NAMESPACE_CONFIG) {
+                    const sectionData = processNamespace(config);
+                    if (sectionData) {
+                        sections.push(sectionData);
+                        totalOriginal += sectionData.original;
+                        totalFiltered += sectionData.filteredCount;
+                    }
+                }
+
+                if (sections.length === 0) {
+                    throw new Error('No valid namespace data found');
+                }
+
+                // Update totals
+                document.getElementById('total-original').textContent = totalOriginal;
+                document.getElementById('total-filtered').textContent = totalFiltered;
+                document.getElementById('total-removed').textContent = totalOriginal - totalFiltered;
+
+                // Create sections
+                const sectionsContainer = document.getElementById('sections-container');
+                sectionsContainer.innerHTML = sections.map(section => 
+                    createSection(section.name, section.original, section.filteredCount, section.filtered)
+                ).join('');
+
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // Add event listeners to check buttons
+                document.querySelectorAll('.check-existence-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const sectionId = this.getAttribute('data-section');
+                        updateSectionExistence(sectionId);
+                    });
+                });
+
+                // Log summary
+                console.log('Processing complete:', {
+                    sectionsProcessed: sections.length,
+                    totalOriginal,
+                    totalFiltered,
+                    totalRemoved: totalOriginal - totalFiltered,
+                    sections: sections.map(s => ({ name: s.name, original: s.original, filtered: s.filteredCount }))
+                });
+
+            } catch (error) {
+                console.error('Error processing data:', error);
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error">Error loading data: ${error.message}<br>Check console for details.</div>`;
+            }
+        }
+
+        // Start processing when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Small delay to ensure all scripts are fully loaded
+            setTimeout(processData, 100);
+        });
+    </script>
+</body>
+</html>
