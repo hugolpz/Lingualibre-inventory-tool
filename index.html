@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta title="viewport" content="width=device-width, initial-scale=1.0">
     <title>Filtered Lists Display</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -164,6 +164,7 @@
     <script src="js/list.js"></script>
     <script src="js/category.js"></script>
     <script src="js/translations.js"></script>
+
     <script>
         // Page existence checker with caching and throttling
         const PageExistenceChecker = {
@@ -273,27 +274,44 @@
         
         // Configuration for namespace files
         const NAMESPACE_CONFIG = [
-            { ns: 'user', name: 'User:*' },
-            { ns: 'help', name: 'Help:*' },
-            { ns: 'lingualibre', name: 'LinguaLibre:*' },
-            { ns: 'list', name: 'List:*' },
-            { ns: 'category', name: 'Category:*' },
-            { ns: 'template', name: 'Template:*' },
-            { ns: 'template_root', name: 'Template:* roots' },
-            { ns: 'translations', name: 'Translations:*' },
-            { ns: 'translations_root', name: 'Translations:* roots' },
+            { ns: 'user', title: 'User:*' },
+            { ns: 'help', title: 'Help:*' },
+            { ns: 'lingualibre', title: 'LinguaLibre:*' },
+            { ns: 'list', title: 'List:*' },
+            { ns: 'category', title: 'Category:*' },
+            { ns: 'template', title: 'Template:*' },
+            { ns: 'translations', title: 'Translations:*' },
+            { ns: 'translations_root', title: 'Translations:* roots' },
         ];
 
-        // Prepare template_root data
-        window.template_root = {
-            cleaner : window['template'].cleaner,
-            list : [...new Set(window['template'].list.map(item => item.split('/')[0]) )]
+        // DRY: Function to prepare root namespaces from their full counterparts
+        function prepareRootNamespace(sourceNamespace) {
+            if (!window[sourceNamespace] || !Array.isArray(window[sourceNamespace].list)) {
+                console.warn(`Cannot prepare root for ${sourceNamespace}: source not found`);
+                return null;
+            }
+            
+            return {
+                cleaner: window[sourceNamespace].cleaner,
+                list: [...new Set(window[sourceNamespace].list.map(item => item.split('/')[0]))]
+            };
         }
-        // Prepare translations_root data
-        window.translations_root = {
-            cleaner : window['translations'].cleaner,
-            list : [...new Set(window['translations'].list.map(item => item.split('/')[0]) )]
+
+        // Initialize root namespaces
+        function initializeRootNamespaces() {            
+            const translationsRoot = prepareRootNamespace('translations');
+            if (translationsRoot) {
+                window.translations_root = translationsRoot;
+                console.log(`✅ Initialized translations_root with ${translationsRoot.list.length} items`);
+            }
         }
+
+        // Call on initial load
+        initializeRootNamespaces();
+        
+        // Expose globally so listing.js can call it after updating data
+        window.initializeRootNamespaces = initializeRootNamespaces;
+
         // Safe cleaner function wrapper
         function safeCleaner(inputList, cleanerFunction) {
             try {
@@ -317,10 +335,10 @@
         }
 
         // Create section HTML
-        function createSection(name, originalCount, filteredCount, filteredItems) {
+        function createSection(title, originalCount, filteredCount, filteredItems) {
             const removedCount = originalCount - filteredCount;
             const removalPercentage = originalCount > 0 ? ((removedCount / originalCount) * 100).toFixed(1) : 0;
-            const sectionId = `section-${name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+            const sectionId = `section-${title.replace(/[^a-zA-Z0-9]/g, '-')}`;
             
             return `
                 <div class="section" id="${sectionId}">
@@ -330,7 +348,7 @@
                                 <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/>
                             </button>
                         </span>
-                        <span class="pageName col-title">${name}</span>
+                        <span class="pageName col-title">${title}</span>
                         <span class="col-title">Status</span>
                     </div>
                     <div class="section-stats">
@@ -415,17 +433,17 @@
             const dataObj = window[config.ns];
             
             if (!dataObj) {
-                console.warn(`${config.name}: Data object not found`);
+                console.warn(`${config.title}: Data object not found`);
                 return null;
             }
             
             if (!Array.isArray(dataObj.list)) {
-                console.warn(`${config.name}: Invalid or missing list array`);
+                console.warn(`${config.title}: Invalid or missing list array`);
                 return null;
             }
             
             if (typeof dataObj.cleaner !== 'function') {
-                console.warn(`${config.name}: Invalid or missing cleaner function`);
+                console.warn(`${config.title}: Invalid or missing cleaner function`);
                 return null;
             }
             
@@ -433,7 +451,7 @@
             const filteredList = safeCleaner(originalList, dataObj.cleaner);
             
             return {
-                name: config.name,
+                title: config.title,
                 original: originalList.length,
                 filtered: filteredList,
                 filteredCount: filteredList.length
@@ -469,7 +487,7 @@
                 // Create sections
                 const sectionsContainer = document.getElementById('sections-container');
                 sectionsContainer.innerHTML = sections.map(section => 
-                    createSection(section.name, section.original, section.filteredCount, section.filtered)
+                    createSection(section.title, section.original, section.filteredCount, section.filtered)
                 ).join('');
 
                 // Show content
@@ -490,7 +508,7 @@
                     totalOriginal,
                     totalFiltered,
                     totalRemoved: totalOriginal - totalFiltered,
-                    sections: sections.map(s => ({ name: s.name, original: s.original, filtered: s.filteredCount }))
+                    sections: sections.map(s => ({ title: s.title, original: s.original, filtered: s.filteredCount }))
                 });
 
             } catch (error) {

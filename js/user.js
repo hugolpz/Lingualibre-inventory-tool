@@ -10,6 +10,8 @@ const user = {
                 .filter(item => !item.includes('.js'))
                 .filter(item => !item.includes('.css'))
                 .filter(item => !item.includes('User:WikiLucas00'))
+                .filter(item => !item.includes('User:Titodutta/sandbox'))
+                .filter(item => !item.includes('User:Titodutta/todo'))
                 .filter(item => !item.includes('User:Olafbot/exclusion list/'));
         },
     list : [
@@ -1886,7 +1888,6 @@ const user = {
     "User:Kopiaobia/RecordWizard.json",
     "User:Koreller",
     "User:Koreller/RecordWizard.json",
-    "User:Koreller/Wikimedia",
     "User:Koukfranck",
     "User:Koukfranck/RecordWizard.json",
     "User:Kourosh-the-Alduin/RecordWizard.json",
@@ -2814,7 +2815,7 @@ const user = {
     "User:Patrice k. EVOU/RecordWizard.json",
     "User:Patricius17/RecordWizard.json",
     "User:Patsagorn Y./RecordWizard.json",
-    "User:Patsagorn Y./list:tha",
+    "User:Patsagorn Y./List:Tha",
     "User:Paul2520/RecordWizard.json",
     "User:Paula Carnero/RecordWizard.json",
     "User:Paula Ibáñez Recalde/RecordWizard.json",
@@ -3400,7 +3401,6 @@ const user = {
     "User:Sujata1963/RecordWizard.json",
     "User:Sujataag",
     "User:Sujataag/RecordWizard.json",
-    "User:Sukkoria/Brouillon",
     "User:Sukkoria/RecordWizard.json",
     "User:Sukkoria/common.css",
     "User:Sukkoria/common.js",

@@ -54,11 +54,11 @@
             background-color: #eaecf0;
             font-weight: bold;
         }
-        .ll-status-include {
+        .ll-statusIcon-include {
             background-color: #d4edda !important;
             color: #155724;
         }
-        .ll-status-exclude {
+        .ll-statusIcon-exclude {
             background-color: #f8d7da !important;
             color: #721c24;
         }
@@ -119,19 +119,23 @@
     `;
     document.head.appendChild(style);
 
-    // Namespace data
-    const namespaces = [
-        { id: 2, name: "User:*", quantity: 0, plan:'❌ Discard', pages: [] },
-        { id: 4, name: "Lingualibre:*", quantity: 0, plan:'✅ Import', pages: [] },
-        { id: 8, name: "MediaWiki:*", quantity: 0, plan:'❌ Discard', pages: [] },
-        { id: 10, name: "Template:*", quantity: 0, plan:'🧹 Clean up', pages: [] },
-        { id: 12, name: "Help:*", quantity: 0, plan:'✅ Import', pages: [] },
-        { id: 14, name: "Category:*", quantity: 0, plan:'🧹 Clean up', pages: [] },
-        { id: 142, name: "List:*", quantity: 0, plan:'🧹 Clean up', pages: [] },
-        { id: 1198, name: "Translations:*", quantity: 0, plan:'✅ Import', pages: [] },
-        { id: 2300, name: "Gadget:*", quantity: 0, plan:'❌ Discard', pages: [] }
-    ];
+    // Namespace data - will be loaded from JSON
+    let namespaces = [];
     let isRefreshing = false;
+    let namespacesLoaded = false;
+    
+    // Load namespaces.json
+    fetch('./json/namespaces.json')
+        .then(response => response.json())
+        .then(data => {
+            namespaces = data;
+            namespacesLoaded = true;
+            console.log('✅ Loaded namespaces.json:', namespaces);
+        })
+        .catch(error => {
+            console.error('❌ Error loading namespaces.json:', error);
+            alert('Failed to load namespaces.json. Please check the file exists and is valid JSON.');
+        });
 
     // Fetch pages in namespace
     async function fetchPagesInNamespace(nsId, nsTitle, apcontinue = null, collectedPages = new Set()) {
@@ -167,10 +171,29 @@
             }
             
             if (data.continue && data.continue.apcontinue) {
+                // Add delay before continuation request to avoid rate limiting
+                updateProgress(`Fetching more pages for ${nsTitle}... (${collectedPages.size} collected so far)`);
+                await new Promise(resolve => setTimeout(resolve, 400)); // 400ms delay
                 await fetchPagesInNamespace(nsId, nsTitle, data.continue.apcontinue, collectedPages);
             }
         } catch (error) {
             console.error(`Error fetching pages for namespace ${nsId} (${nsTitle}):`, error);
+            
+            // Add retry logic for rate limit errors (503) or network errors
+            if (error.message.includes('503') || error.message.includes('NetworkError')) {
+                console.warn(`⚠️ Rate limit hit for ${nsTitle}, waiting 3 seconds before retry...`);
+                updateProgress(`Rate limit hit for ${nsTitle}, waiting before retry...`);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Retry once
+                try {
+                    console.log(`🔄 Retrying ${nsTitle}...`);
+                    return await fetchPagesInNamespace(nsId, nsTitle, apcontinue, collectedPages);
+                } catch (retryError) {
+                    console.error(`❌ Retry failed for ${nsTitle}:`, retryError);
+                    updateProgress(`Error: Failed to fetch ${nsTitle} after retry`);
+                }
+            }
         }
 
         return collectedPages;
@@ -196,15 +219,15 @@
         
         namespaces.forEach(ns => {
             const row = document.createElement('tr');
-            const status = ns.quantity > 0 ? '✅' : '❌';
-            const statusClass = ns.quantity > 0 ? 'll-status-include' : 'll-status-exclude';
-            const plan = ns.plan;
+            const statusIcon = ns.quantity > 0 ? '✅' : '❌';
+            const statusClass = ns.quantity > 0 ? 'll-statusIcon-include' : 'll-statusIcon-exclude';
+            const status = ns.status;
             
             row.innerHTML = `
                 <td>${ns.id}</td>
-                <td style="font-family: monospace;">${ns.name}</td>
-                <td style="text-align: right; font-weight: bold;" class="${statusClass}">${status+' '+ ns.quantity.toLocaleString()}</td>
-                <td  style="text-align: center;">${plan}</td>
+                <td style="font-family: monospace;">${ns.title}</td>
+                <td style="text-align: right; font-weight: bold;" class="${statusClass}">${statusIcon+' '+ ns.quantity.toLocaleString()}</td>
+                <td  style="text-align: center;">${status}</td>
             `;
             tableBody.appendChild(row);
         });
@@ -220,6 +243,25 @@
 
     // Process namespaces
     async function processNamespaces() {
+        // Check if namespaces are loaded
+        if (!namespacesLoaded || namespaces.length === 0) {
+            updateProgress("⚠️ Waiting for namespaces.json to load...");
+            console.warn('⚠️ namespaces.json not loaded yet, waiting...');
+            
+            // Wait for up to 5 seconds for the JSON to load
+            let attempts = 0;
+            while (!namespacesLoaded && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!namespacesLoaded || namespaces.length === 0) {
+                updateProgress("❌ Error: namespaces.json failed to load");
+                alert('Error: namespaces.json failed to load. Please refresh the page.');
+                return;
+            }
+        }
+        
         if (isRefreshing) return;
         
         isRefreshing = true;
@@ -230,34 +272,35 @@
         }
 
         console.log("🚀 Starting namespace data fetch...");
+        console.log(`📊 Processing ${namespaces.length} namespaces:`, namespaces);
         updateProgress("Starting namespace data fetch...");
         
         for (let i = 0; i < namespaces.length; i++) {
             try {
                 const ns = namespaces[i];
-                updateProgress(`Processing ${i + 1}/${namespaces.length}: ${ns.name}`);
-                console.log(`📋 Processing namespace ${i + 1}/${namespaces.length}: ${ns.name}`);
+                updateProgress(`Processing ${i + 1}/${namespaces.length}: ${ns.title}`);
+                console.log(`📋 Processing namespace ${i + 1}/${namespaces.length}: ${ns.title} (ID: ${ns.id})`);
                 
-                const pages = await fetchPagesInNamespace(ns.id, ns.name);
+                const pages = await fetchPagesInNamespace(ns.id, ns.title);
                 ns.quantity = pages.size;
                 ns.pages = Array.from(pages);
 
                 // Save to localStorage
-                saveToLocalStorage(ns.name, ns.pages);
+                saveToLocalStorage(ns.title, ns.pages);
 
-                console.log(`✅ ${pages.size} pages for ${ns.name}`);
-                console.log(`Pages for ${ns.name}:`, pages);
+                console.log(`✅ ${pages.size} pages for ${ns.title}`);
+                console.log(`Pages for ${ns.title}:`, pages);
                 updateNamespaceTable();
                 
                 // Add delay between requests (except for the last one)
                 if (i < namespaces.length - 1) {
-                    updateProgress(`Waiting before next request... (${i + 1}/${namespaces.length} completed)`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    updateProgress(`Waiting before next namespace... (${i + 1}/${namespaces.length} completed)`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
                 
             } catch (err) {
-                console.error(`❌ Failed to fetch data for ${namespaces[i].name}:`, err);
-                updateProgress(`Error processing ${namespaces[i].name}: ${err.message}`);
+                console.error(`❌ Failed to fetch data for ${namespaces[i].title}:`, err);
+                updateProgress(`Error processing ${namespaces[i].title}: ${err.message}`);
             }
         }
         
@@ -267,7 +310,7 @@
         isRefreshing = false;
         if (refreshBtn) {
             refreshBtn.disabled = false;
-            refreshBtn.textContent = 'Refresh Data';
+            refreshBtn.textContent = 'Fetch & Save Data';
         }
     }
 
@@ -284,7 +327,7 @@
 
         let updatedCount = 0;
         namespaces.forEach(ns => {
-            const key = ns.name.replace(':*', '').toLowerCase();
+            const key = ns.title.replace(':*', '').toLowerCase();
             const storageKey = `ll_namespace_${key}`;
             
             try {
@@ -307,7 +350,15 @@
             }
         });
 
-        updateProgress(`✅ Updated ${updatedCount} namespaces from localStorage. Close this modal and the page will update automatically.`);
+        updateProgress(`✅ Updated ${updatedCount} namespaces from localStorage.`);
+        
+        // Refresh root namespaces using the DRY function from index.html
+        if (typeof window.initializeRootNamespaces === 'function') {
+            window.initializeRootNamespaces();
+            console.log('✅ Refreshed template_root and translations_root');
+        } else {
+            console.warn('⚠️ window.initializeRootNamespaces not found');
+        }
         
         // Trigger the page's processData function if it exists
         if (typeof window.processData === 'function') {
@@ -317,9 +368,14 @@
                 updateProgress(`✅ Page data refreshed with localStorage data!`);
                 if (updateBtn) {
                     updateBtn.disabled = false;
-                    updateBtn.textContent = 'Update Webpage\'s Data';
                     updateBtn.style.background = '#28a745';
                     updateBtn.textContent = '✓ Updated';
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        updateBtn.style.background = '';
+                        updateBtn.textContent = 'Update Webpage\'s Data';
+                    }, 2000);
                 }
             }, 500);
         } else {

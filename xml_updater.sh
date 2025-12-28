@@ -3,7 +3,7 @@
 #
 # DESCRIPTION:
 #   This script applies MediaWiki namespace replacements to all XML files
-#   in the ./data folder. It processes the files based on the replacement
+#   in the ./xml folder. It processes the files based on the replacement
 #   rules defined in replace.js, converting LinguaLibre namespaces to their
 #   target destinations for migration purposes.
 #
@@ -32,13 +32,13 @@
 # REQUIREMENTS:
 #   - sed command
 #   - find command
-#   - XML files in ./data directory
+#   - XML files in ./xml directory
 #
 # AUTHOR:
 #   Generated from replace.js configuration
 #
 # WARNING:
-#   This script modifies files in-place. Make sure to backup your data
+#   This script modifies files in-place. Make sure to backup your xml
 #   before running this script.
 
 # Parse command line arguments
@@ -74,17 +74,17 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check if data directory exists
-if [[ ! -d "./data" ]]; then
-    echo "ERROR: ./data directory not found!" >&2
+# Check if xml directory exists
+if [[ ! -d "./xml" ]]; then
+    echo "ERROR: ./xml directory not found!" >&2
     exit 1
 fi
 
 # Count total files
-total_files=$(find ./data -name "*.xml" -type f | wc -l)
+total_files=$(find ./xml -name "*.xml" -type f | wc -l)
 
 if [[ $total_files -eq 0 ]]; then
-    echo "No XML files found in ./data directory" >&2
+    echo "No XML files found in ./xml directory" >&2
     exit 1
 fi
 
@@ -99,15 +99,24 @@ fi
 current=0
 
 # Define sed replacement commands
-# <title>LinguaLibre:User rights</title> decides the pagename
+# Based on json/replaces.json rules, adapted for sed syntax
+# Note: Using \? for optional matches in basic sed regex
+# Rules 1-3, 4-5, 7-8, 10, 12-15 (11 sed-compatible rules out of 15 total)
+# Skipped: Rule 6 (complex multiline regex), Rule 9 (negative lookbehind), Rule 11 (negative lookbehind)
 SED_COMMANDS=(
-    's|/LinguaLibre:/|Commons:Lingua Libre/|g'
-    's|/Template:/|Template:LL-|g'
-    's|/Help:/|Help:Lingua Libre/|g'
-    's|/Category:/|Category:LL-|g'
-    's|/List:/|Commons:Lingua Libre/List:|g'
-    's|/Translations:/|Translations:|g'
-    's|/Welcome\//|Welcome-LL/|g'
+    's|\[\[:\?[Cc]:|[[|g'                                        # Rule 1: [[:c: prefix removal
+    's|\[\[:\?[Cc]ommons:|[[|g'                                  # Rule 2: [[:Commons: prefix removal
+    's|\[\[Special:RecordWizard|[[:lingualibre:Special:RecordWizard|g'  # Rule 3: Special:RecordWizard
+    's|<syntaxhighlight lang="sparql">|{{SPARQL\|query=|g'      # Rule 4: <syntaxhighlight> opening tag
+    's|</syntaxhighlight>|}}|g'                                  # Rule 5: </syntaxhighlight> closing tag
+    's|Category:Tool\([^[:space:]]\)|Category:Lingua Libre tool\1|g'    # Rule 7: Category:Tool
+    's|Category:Speakers in|Category:Voice contributors in|g'   # Rule 8: Category:Speakers in
+    's|LinguaLibre:|Commons:Lingua Libre/|g'                     # Rule 10: LinguaLibre:
+    's|List:|Commons:Lingua Libre/Lists/|g'                      # Rule 12: List:
+    's|Help:|Help:Lingua Libre/|g'                      # Rule 12b: List:
+    's|Translations:|Translations:|g'                            # Rule 13: Translations: (no-op, keeps as is)
+    's|Template:|Template:|g'                                    # Rule 14: Template: (no-op, keeps as is)
+    's|Welcome/|Welcome-LL/|g'                                   # Rule 15: Welcome/
 )
 
 # Build sed command string
@@ -117,7 +126,7 @@ for cmd in "${SED_COMMANDS[@]}"; do
 done
 
 # Apply replacements to each XML file
-find ./data -name "*.xml" -type f | while read -r file; do
+find ./xml -name "*.xml" -type f | while read -r file; do
     current=$((current + 1))
     
     if [[ $VERBOSE == true ]]; then
