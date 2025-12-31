@@ -1,14 +1,16 @@
-{
+{ 
     "rules": [
         { "type":"content", "match": "\\[\\[:?[Cc]:", "replace": "[[" },
         { "type":"content", "match": "\\[\\[:?[Cc]ommons:", "replace": "[[" },
         { "type":"content", "match": "\\[\\[Special:RecordWizard", "replace": "[[:lingualibre:Special:RecordWizard" },
-        { "type":"content", "match": "<syntaxhighlight lang=\"sparql\">", "replace": "{{SPARQL|query=" },
-        { "type":"content", "match": "</syntaxhighlight>", "replace": "}}" },
-        { "type":"content", "match": "<query[^>]*>\\s*\\n[\\s\\S]+?\\n\\s*</query>", "replace": "" },
-        { "type":"content", "match": "\[https://lingualibre.org/index.php\?title=(.+?)&amp;oldid=\d+ (.+?)\]", "replace": "[[$1|$2]]" },
-        { "type":"rename", "match": "Category:Tool(?!\\s)", "replace": "Category:Lingua Libre tool" },
+        { "type":"content", "match": "{\\|[\\s\\S]*?<syntaxhighlight lang=\"sparql\">([\\s\\S]+?)</syntaxhighlight>[\\s\\S]*?\\|}", "replace": "{{SPARQL|query=$1}}" },
+        { "type":"content", "match": "\\[https://lingualibre\\.org/index\\.php\\?title=(.+?)&amp;oldid=\\d+ (.+?)\\]", "replace": "[[$1|$2]]" },
+        { "type":"content", "match": "\\[https://commons\\.org/w/index\\.php\\?title=(.+?)&amp;oldid=\\d+ (.+?)\\]", "replace": "[[$1|$2]]" },
+        { "type":"content", "match": "(<text[^>]*>)", "replace": "$1{{Lingua Libre list\\n|code=\\n|quality=\\n|method=\\n|items=word\\n|dictionary=false\\n}}\\n", "requires": "list" },
+        { "type":"rename", "match": "Category:Tool", "replace": "Category:Lingua Libre tool" },
         { "type":"rename", "match": "Category:Speakers in", "replace": "Category:Voice contributors in" },
+        { "type":"content", "match": "=Speakers in", "replace": "=Voice contributors in" },
+        { "type":"content", "match": "Template:Speaker of the", "replace": "Template:Voice contributor of the" },
         { "type":"rename", "match": "User:", "replace": "User:" },
         { "type":"rename", "match": "LinguaLibre:", "replace": "Commons:Lingua Libre/" },
         { "type":"rename", "match": "Lingua Libre:Help", "replace": "Help:Lingua Libre" },
@@ -16,6 +18,6 @@
         { "type":"rename", "match": "List:", "replace": "Commons:Lingua Libre/Lists/" },
         { "type":"rename", "match": "Translations:", "replace": "Translations:" },
         { "type":"rename", "match": "Template:", "replace": "Template:" },
-        { "type":"rename", "match": "Welcome/", "replace": "Welcome-LL/" },
+        { "type":"rename", "match": "Welcome/", "replace": "Welcome-LL/" }
     ]
 }

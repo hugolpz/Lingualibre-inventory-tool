@@ -223,10 +223,32 @@
             const statusClass = ns.quantity > 0 ? 'll-statusIcon-include' : 'll-statusIcon-exclude';
             const status = ns.status;
             
+            // Calculate keep count by applying the cleaner function if available
+            let keepCount = '-';
+            if (ns.pages && ns.pages.length > 0) {
+                const key = ns.title.replace(':*', '').toLowerCase();
+                const jsVarName = key.toLowerCase();
+                
+                // Check if the corresponding window object exists with a cleaner function
+                if (typeof window !== 'undefined' && window[jsVarName] && typeof window[jsVarName].cleaner === 'function') {
+                    try {
+                        const filtered = window[jsVarName].cleaner(ns.pages);
+                        keepCount = Array.isArray(filtered) ? filtered.length.toLocaleString() : '-';
+                    } catch (error) {
+                        console.warn(`Error applying cleaner for ${ns.title}:`, error);
+                        keepCount = '?';
+                    }
+                } else {
+                    // No cleaner available, keep count equals total count
+                    keepCount = ns.quantity.toLocaleString();
+                }
+            }
+            
             row.innerHTML = `
                 <td>${ns.id}</td>
                 <td style="font-family: monospace;">${ns.title}</td>
                 <td style="text-align: right; font-weight: bold;" class="${statusClass}">${statusIcon+' '+ ns.quantity.toLocaleString()}</td>
+                <td style="text-align: right; color: #28a745; font-weight: bold;">${keepCount}</td>
                 <td  style="text-align: center;">${status}</td>
             `;
             tableBody.appendChild(row);
@@ -416,7 +438,8 @@
                     <tr>
                         <th style="text-align:center;">NS</th>
                         <th style="text-align:center;">Prefix</th>
-                        <th style="text-align:right;">Count</th>
+                        <th style="text-align:right;">API count</th>
+                        <th style="text-align:right;">Keep count</th>
                         <th style="text-align:center;">Approach</th>
                     </tr>
                 </thead>
