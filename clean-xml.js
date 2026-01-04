@@ -124,7 +124,7 @@ if (testMode) {
         { input: '<title>Category:Tool</title>', expects: '<title>Category:Lingua Libre tool</title>' },
         { input: '<title>Category:Speakers in fra</title>', expects: '<title>Category:Voice contributors in fra</title>' },
         { input: '<title>Help:SPARQL</title>', expects: '<title>Help:Lingua Libre/SPARQL</title>' },
-        { input: '<title>List:Fra/Animals</title>', expects: '<title>Commons:Lingua Libre/Lists/Fra/Animals</title>' },
+        { input: '<title>List:Fra/Animals</title>', expects: '<title>Commons:Lingua Libre/List/Fra/Animals</title>' },
         { input: '<title>Welcome/</title>', expects: '<title>Welcome-LL/</title>' },
         // Additional edge cases
         { input: '<title>LinguaLibre:Main Page</title>', expects: '<title>Commons:Lingua Libre/Main Page</title>' },
@@ -160,12 +160,50 @@ ORDER BY DESC (?audio)
 |items=word
 |dictionary=false
 }}
-Blabla</text>` : `<text bytes="37" sha1="ki0q0lz9v78h5i2lfxsuvb8lm5ur8c7" xml:space="preserve">Blabla</text>` },
+
+# Blabla</text>` : `<text bytes="37" sha1="ki0q0lz9v78h5i2lfxsuvb8lm5ur8c7" xml:space="preserve">Blabla</text>` },
         { input: '[https://lingualibre.org/index.php?title=Special:RecordWizard&amp;oldid=123456 RecordWizard]', 
             expects: '[[Special:RecordWizard|RecordWizard]]' },
         { input: '[https://commons.org/w/index.php?title=Commons:Lingua_Libre&amp;oldid=789 Lingua Libre]', 
             expects: '[[Commons:Lingua_Libre|Lingua Libre]]' },
         { input: 'Template:Speaker of the month', expects: 'Template:Voice contributor of the month' },
+        // Line-by-line processing tests (requires --activate=list)
+        { input: '<text>* apple\n* banana\n* cherry</text>', 
+            expects: activatedFeatures.has('list') ? `<text>{{Lingua Libre list
+|code=
+|quality=
+|method=
+|items=word
+|dictionary=false
+}}
+
+# apple
+# banana
+# cherry</text>` : '<text>* apple\n* banana\n* cherry</text>' },
+        { input: '<text>  word1\n  word2\n  word3</text>', 
+            expects: activatedFeatures.has('list') ? `<text>{{Lingua Libre list
+|code=
+|quality=
+|method=
+|items=word
+|dictionary=false
+}}
+
+# word1
+# word2
+# word3</text>` : '<text>  word1\n  word2\n  word3</text>' },
+        { input: '<text>*word1\n  word2\n* word3</text>', 
+            expects: activatedFeatures.has('list') ? `<text>{{Lingua Libre list
+|code=
+|quality=
+|method=
+|items=word
+|dictionary=false
+}}
+
+# word1
+# word2
+# word3</text>` : '<text>*word1\n  word2\n* word3</text>' },
     ];
     
     // Apply all rules to text (both content and rename)
@@ -176,10 +214,23 @@ Blabla</text>` : `<text bytes="37" sha1="ki0q0lz9v78h5i2lfxsuvb8lm5ur8c7" xml:sp
             if (rule.requires && !activatedFeatures.has(rule.requires)) {
                 continue;
             }
-            const regex = new RegExp(rule.match, 'g');
+            const flags = rule.flags || 'g';
+            const regex = new RegExp(rule.match, flags);
             // Convert escaped newlines in replacement string to actual newlines
             const replacement = rule.replace.replace(/\\n/g, '\n');
-            result = result.replace(regex, replacement);
+            
+            // Check if this rule should process line-by-line
+            if (rule.process === 'lineByLine') {
+                // Process line-by-line within <text> elements
+                result = result.replace(/(<text[^>]*>)([\s\S]*?)(<\/text>)/g, (match, openTag, textContent, closeTag) => {
+                    const lines = textContent.split('\n');
+                    const processedLines = lines.map(line => line.replace(regex, replacement));
+                    return openTag + processedLines.join('\n') + closeTag;
+                });
+            } else {
+                // Normal replacement
+                result = result.replace(regex, replacement);
+            }
         }
         return result;
     }
@@ -255,18 +306,52 @@ function applyRules(content, filename) {
             continue;
         }
         try {
-            // Create regex from the match pattern
-            const regex = new RegExp(rule.match, 'g');
+            // Get flags from rule or default to 'g'
+            const flags = rule.flags || 'g';
+            const regex = new RegExp(rule.match, flags);
             const before = modified;
             // Convert escaped newlines in replacement string to actual newlines
             const replacement = rule.replace.replace(/\\n/g, '\n');
-            modified = modified.replace(regex, replacement);
             
-            if (before !== modified) {
-                const ruleChanges = (before.match(regex) || []).length;
-                changesCount += ruleChanges;
-                if (verbose) {
-                    changes.push(`  Rule: ${rule.match.substring(0, 50)}... -> ${ruleChanges} replacements`);
+            // Check if this rule should process line-by-line
+            if (rule.process === 'lineByLine') {
+                // Process line-by-line within <text> elements
+                modified = modified.replace(/(<text[^>]*>)([\s\S]*?)(<\/text>)/g, (match, openTag, textContent, closeTag) => {
+                    // Split content into lines
+                    const lines = textContent.split('\n');
+                    let lineChanges = 0;
+                    
+                    // Apply regex to each line
+                    const processedLines = lines.map(line => {
+                        const lineBefore = line;
+                        const lineAfter = line.replace(regex, replacement);
+                        if (lineBefore !== lineAfter) {
+                            lineChanges++;
+                        }
+                        return lineAfter;
+                    });
+                    
+                    if (lineChanges > 0) {
+                        changesCount += lineChanges;
+                    }
+                    
+                    // Rejoin lines
+                    return openTag + processedLines.join('\n') + closeTag;
+                });
+                
+                if (before !== modified && verbose) {
+                    changes.push(`  Rule (lineByLine): ${rule.match.substring(0, 50)}... -> ${changesCount} line replacements`);
+                }
+            } else {
+                // Normal replacement
+                modified = modified.replace(regex, replacement);
+                
+                if (before !== modified) {
+                    const ruleChanges = (before.match(regex) || []).length;
+                    changesCount += ruleChanges;
+                    if (verbose) {
+                        changes.push(`  Rule: ${rule.match.substring(0, 50)}... -> ${ruleChanges} replacements`);
+                    }
                 }
             }
         } catch (error) {

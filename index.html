@@ -66,13 +66,22 @@
         .section-header span:nth-child(2),
         .section-stats span:nth-child(2),
         .list-item span:nth-child(2) {
-            flex: 1;
-            min-width: 0;
+            width: 80px;
+            flex-shrink: 0;
+            text-align: right;
+            font-family: monospace;
         }
         
         .section-header span:nth-child(3),
         .section-stats span:nth-child(3),
         .list-item span:nth-child(3) {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .section-header span:nth-child(4),
+        .section-stats span:nth-child(4),
+        .list-item span:nth-child(4) {
             width: 120px;
             flex-shrink: 0;
             text-align: right;
@@ -262,6 +271,97 @@
                 return null; // Unknown, check in progress
             }
         };
+
+        // Page size checker for LinguaLibre.org
+        const PageSizeChecker = {
+            cache: new Map(),
+            queue: [],
+            isProcessing: false,
+            batchSize: 50,
+            delayBetweenBatches: 1000,
+            
+            async check(pageTitle) {
+                if (this.cache.has(pageTitle)) {
+                    return this.cache.get(pageTitle);
+                }
+                
+                return new Promise((resolve) => {
+                    this.queue.push({ pageTitle, resolve });
+                    this.processBatch();
+                });
+            },
+            
+            async processBatch() {
+                if (this.isProcessing || this.queue.length === 0) {
+                    return;
+                }
+                
+                this.isProcessing = true;
+                const batch = this.queue.splice(0, this.batchSize);
+                const titles = batch.map(item => item.pageTitle);
+                
+                try {
+                    const results = await this.queryAPI(titles);
+                    
+                    batch.forEach(item => {
+                        const size = results[item.pageTitle] || 0;
+                        this.cache.set(item.pageTitle, size);
+                        item.resolve(size);
+                    });
+                } catch (error) {
+                    console.error('Error checking page size:', error);
+                    batch.forEach(item => {
+                        this.cache.set(item.pageTitle, 0);
+                        item.resolve(0);
+                    });
+                }
+                
+                this.isProcessing = false;
+                
+                if (this.queue.length > 0) {
+                    setTimeout(() => this.processBatch(), this.delayBetweenBatches);
+                }
+            },
+            
+            async queryAPI(titles) {
+                const url = new URL('https://lingualibre.org/api.php');
+                url.searchParams.set('action', 'query');
+                url.searchParams.set('format', 'json');
+                url.searchParams.set('origin', '*');
+                url.searchParams.set('titles', titles.join('|'));
+                url.searchParams.set('prop', 'info');
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const results = {};
+                
+                if (data.query && data.query.pages) {
+                    for (const pageId in data.query.pages) {
+                        const page = data.query.pages[pageId];
+                        // Get page length (size in bytes)
+                        results[page.title] = page.length || 0;
+                    }
+                }
+                
+                return results;
+            },
+            
+            checkSync(pageTitle) {
+                if (this.cache.has(pageTitle)) {
+                    return this.cache.get(pageTitle);
+                }
+                this.check(pageTitle);
+                return null;
+            },
+            
+            formatSize(bytes) {
+                if (bytes === null || bytes === 0) return '-';
+                if (bytes < 1024) return `${bytes}B`;
+                if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`;
+                return `${(bytes / (1024 * 1024)).toFixed(1)}M`;
+            }
+        };
         
         // Wrapper function for ease of use
         function existsOnWiki(pageTitle) {
@@ -348,10 +448,12 @@
                                 <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/>
                             </button>
                         </span>
+                        <span class="col-title">Size</span>
                         <span class="pageName col-title">${title}</span>
                         <span class="col-title">Status</span>
                     </div>
                     <div class="section-stats">
+                        <span></span>
                         <span></span>
                         <span>Original: ${originalCount} | Filtered: ${removedCount} | Kept: ${filteredCount}</span>
                         <span style="opacity: 0.8;">
@@ -360,8 +462,8 @@
                     </div>
                     <div class="list-container">
                         ${filteredItems.length > 0 
-                            ? filteredItems.map(item => `<div class="list-item"><span class="isOnCommons" data-page="${item}">-</span><span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span><span></span></div>`).join('')
-                            : '<div class="list-item" style="font-style: italic; color: #666;"><span></span><span>No items remaining after filtering</span><span></span></div>'
+                            ? filteredItems.map(item => `<div class="list-item"><span class="isOnCommons" data-page="${item}">-</span><span class="pageSize" data-page="${item}">-</span><span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span><span></span></div>`).join('')
+                            : '<div class="list-item" style="font-style: italic; color: #666;"><span></span><span></span><span>No items remaining after filtering</span><span></span></div>'
                         }
                     </div>
                 </div>
@@ -374,29 +476,39 @@
             if (!section) return;
             
             const button = section.querySelector('.check-existence-btn');
-            const indicators = section.querySelectorAll('.isOnCommons[data-page]');
+            const existenceIndicators = section.querySelectorAll('.isOnCommons[data-page]');
+            const sizeIndicators = section.querySelectorAll('.pageSize[data-page]');
             
-            if (!indicators.length) return;
+            if (!existenceIndicators.length) return;
             
             // Update button state
             button.disabled = true;
             button.innerHTML = '<img src="./assets/commons.svg" alt="Checking..." style="width:16px;height:16px; animation: spin 1s linear infinite;"/>';
             button.style.cursor = 'wait';
             
-            const totalCount = indicators.length;
+            const totalCount = existenceIndicators.length;
             let checkedCount = 0;
             
             // Set all to pending immediately
-            indicators.forEach(indicator => {
+            existenceIndicators.forEach(indicator => {
+                indicator.textContent = '⏳';
+            });
+            sizeIndicators.forEach(indicator => {
                 indicator.textContent = '⏳';
             });
             
             // Queue all checks at once (this triggers batch processing)
-            const checkPromises = Array.from(indicators).map(async (indicator) => {
-                const pageTitle = indicator.getAttribute('data-page');
+            const checkPromises = Array.from(existenceIndicators).map(async (existenceIndicator, index) => {
+                const pageTitle = existenceIndicator.getAttribute('data-page');
                 if (pageTitle) {
-                    const exists = await PageExistenceChecker.check(pageTitle);
-                    indicator.textContent = exists ? '✅' : '❌';
+                    // Check both existence and size in parallel
+                    const [exists, size] = await Promise.all([
+                        PageExistenceChecker.check(pageTitle),
+                        PageSizeChecker.check(pageTitle)
+                    ]);
+                    
+                    existenceIndicator.textContent = exists ? '✅' : '❌';
+                    sizeIndicators[index].textContent = PageSizeChecker.formatSize(size);
                     
                     checkedCount++;
                     button.textContent = `${checkedCount}/${totalCount}`;

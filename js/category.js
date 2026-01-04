@@ -14,7 +14,11 @@ const category = {
                 .filter(item => !item.includes('Category:Bureaucrats of Lingua Libre'))
                 .filter(item => !item.includes('Category:Speakers in '))
                 .filter(item => !item.includes('Category:Speakers of the month'))
-                .filter(item => !item.includes('Category:Wiki Audio Walk'));
+                .filter(item => !item.includes('Category:Wiki Audio Walk'))
+                .filter(item => !item.includes('Category:Events'))
+                .filter(item => !item.includes('Category:LiLiZip'))
+                .filter(item => !item.includes('Category:Lingua Libre templates'))
+                .filter(item => !item.includes('Category:Speakers by language'));
         },
     list : [
     "Category:Ain",

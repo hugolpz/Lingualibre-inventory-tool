@@ -14,7 +14,8 @@ const lingualibre = {
                 .filter(item => !item.includes('LinguaLibre:Stat'))
                 //.filter(item => !item.includes('LinguaLibre:About'))
                 //.filter(item => !item.includes('LinguaLibre:Privacy'))
-                .filter(item => !item.includes('LinguaLibre:Translation administrators'));
+                .filter(item => !item.includes('LinguaLibre:Translation administrators'))
+                .filter(item => !item.includes('Explore the sound library'));
         },
     list : [
     "LinguaLibre:2022-2023 projection",

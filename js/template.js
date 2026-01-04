@@ -57,7 +57,7 @@ const template = {
             'Template:Hermite Dave',
             //'Template:High-use',
             //'Template:IsDocSubpage',
-            //'Template:LINGUALEX license', // deleted
+        //'Template:LINGUALEX license', // deleted
             //'Template:Label',
             //'Template:Lang-CR',
             //'Template:LangSwitch',
@@ -65,7 +65,7 @@ const template = {
             //'Template:LanguagesGallery',
             //'Template:Laugh',
             //'Template:LexemeQueriesGenerator',
-            //'Template:LinguaLex licence',
+        //'Template:LinguaLex licence',
             //'Template:LinguaLibre scripts',
             //'Template:Lingua Libre scripts',
             //'Template:Ll',
@@ -141,7 +141,7 @@ const template = {
             //'Template:Translatable template',
             //'Template:Translate',
             //'Template:Trim',
-            // 'Template:UNILEX license',
+        // 'Template:UNILEX license',
             //'Template:User SUL Box',
             //'Template:User details',
             'Template:User first 500k',
@@ -207,7 +207,7 @@ const template = {
             //'Template:Weak support',
             //'Template:White',
             //'Template:Wikt-list',
-            //'Template:Worldlex',
+        //'Template:Worldlex',
             //'Template:Zh other'
         ];
 

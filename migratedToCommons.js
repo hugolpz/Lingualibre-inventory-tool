@@ -15,7 +15,7 @@
         { match: "Category:Tool", replace: "Category:Lingua Libre tool" },
         { match: "Category:Speakers in", replace: "Category:Voice contributors in" },
         { match: "LinguaLibre:", replace: "Commons:Lingua Libre/" },
-        { match: "List:", replace: "Commons:Lingua Libre/Lists/" },
+        { match: "List:", replace: "Commons:Lingua Libre/List/" },
         { match: "Welcome/", replace: "Welcome-LL/" },
         { match: "Help:Main", replace: "Help:Lingua Libre" },
         { match: "Help:", replace: "Help:Lingua Libre/" },
@@ -117,6 +117,11 @@
 </div>`;
 
         contentElement.outerHTML = newPageContent;
+        // Hide the edit button
+        const editButton = document.getElementById('ca-edit');
+        if (editButton) {
+            editButton.style.display = 'none';
+        }
         
         console.log(`migratedToCommons.js: Redirected "${pageTitle}" to "${newPageTitle}"`);
     }
