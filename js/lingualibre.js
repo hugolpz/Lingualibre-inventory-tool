@@ -15,7 +15,10 @@ const lingualibre = {
                 //.filter(item => !item.includes('LinguaLibre:About'))
                 //.filter(item => !item.includes('LinguaLibre:Privacy'))
                 .filter(item => !item.includes('LinguaLibre:Translation administrators'))
-                .filter(item => !item.includes('Explore the sound library'));
+                .filter(item => !item.includes('Explore the sound library'))
+                .filter(item => item !== 'LinguaLibre:Technical board')
+                .filter(item => item !== 'LinguaLibre:Chat room')
+                .filter(item => !/\/([a-z]{2,3}(-[a-z]{2,4})?)$/.test(item));
         },
     list : [
     "LinguaLibre:2022-2023 projection",

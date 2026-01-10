@@ -212,13 +212,13 @@ const template = {
         ];
 
         return inputList
-                    // .filter(item => !item.includes('Template:User records'))
-                    .filter(item => item !== 'Template:P')
-                    .filter(item => item !== 'Template:U')
-                    .filter(item => item !== 'Template:T')
-                    .filter(item => item !== 'Template:W')
-                    .filter(item => item !== 'Template:Userbox')
-                    .filter(item => keepList.includes(item));},
+                .filter(item => item !== 'Template:P')
+                .filter(item => item !== 'Template:U')
+                .filter(item => item !== 'Template:T')
+                .filter(item => item !== 'Template:W')
+                .filter(item => item !== 'Template:Userbox')
+                .filter(item => keepList.some(kept => item.startsWith(kept)));
+                },
     list : [
     "Template:-",
     "Template:100k barnstar",

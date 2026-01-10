@@ -11,16 +11,23 @@
     'use strict';
 
     // Transformation rules from json/replaces.json (type: "rename" only)
-    const transformRules = [
-        { match: "Category:Tool", replace: "Category:Lingua Libre tool" },
-        { match: "Category:Speakers in", replace: "Category:Voice contributors in" },
-        { match: "LinguaLibre:", replace: "Commons:Lingua Libre/" },
-        { match: "List:", replace: "Commons:Lingua Libre/List/" },
-        { match: "Welcome/", replace: "Welcome-LL/" },
-        { match: "Help:Main", replace: "Help:Lingua Libre" },
-        { match: "Help:", replace: "Help:Lingua Libre/" },
-        // Namespaces that keep the same name but redirect to Commons
-        { match: "^(User:|Category:|Translations:|Template:)", replace: "$1", redirectToCommons: true },
+    const transformRules = [        
+        { "type":"rename", "match": "Category:Tool", "replace": "Category:Lingua Libre tool" },
+        { "type":"rename", "match": "Category:Events", "replace": "Category:Lingua Libre events" },
+        { "type":"rename", "match": "Category:Speakers in", "replace": "Category:Voice contributors in" },
+        { "type":"rename", "match": "Category:Speakers by", "replace": "Category:Voice contributors by" },
+        { "type":"rename", "match": "User:", "replace": "User:" },
+        { "type":"rename", "match": "LL:", "replace": "Commons:Lingua Libre/" },
+        { "type":"rename", "match": "\\|Lingua[lL]ibre:", "replace": "|Lingua Libre/" },
+        { "type":"rename", "match": "Lingua[lL]ibre:", "replace": "Commons:Lingua Libre/" },
+        { "type":"rename", "match": "LinguaLibre:Help", "replace": "Help:Lingua Libre" },
+        { "type":"rename", "match": "Help:", "replace": "Help:Lingua Libre/" },
+        { "type":"rename", "match": "List:Teochew ", "replace": "List:Teochew/Teochew-" },  
+        { "type":"rename", "match": "List:CY/ ", "replace": "List:Cym" },  
+        { "type":"rename", "match": "List:", "replace": "Commons:Lingua Libre/List/" },      
+        { "type":"rename", "match": "Translations:", "replace": "Translations:" },
+        { "type":"rename", "match": "Template:", "replace": "Template:" },
+        { "type":"rename", "match": "Welcome/", "replace": "Welcome-LL/" }
     ];
 
     /**
@@ -97,7 +104,11 @@
      */
     function showRedirectMessage(pageTitle, newPageTitle) {
         const contentElement = document.getElementById('mw-content-text');
-        
+        // Do not redirect Main_page
+        if (pageTitle === 'LinguaLibre:Main Page') {
+            console.log(`migratedToCommons.js: Skipping redirect for "${pageTitle}" being Main Page`);
+            return;
+        }
         if (!contentElement) {
             console.warn('migratedToCommons.js: Could not find #mw-content-text element');
             return;

@@ -4,7 +4,9 @@ const help = {
                 //.filter(item => !item.includes('Template:Autopatrolled'))
                 .filter(item => !item.includes('Help:Add a new language'))
                 .filter(item => !item.includes('Help:Documentation opérationelle'))
-                .filter(item => !item.includes('Help:Rename'));
+                .filter(item => !item.includes('Help:Rename'))
+                .filter(item => !item.includes('Help:SPARQL'))
+                .filter(item => !/\/([a-z]{2,3}(-[a-z]{2,4})?)$/.test(item));
         },
     list : [
     "Help:API",

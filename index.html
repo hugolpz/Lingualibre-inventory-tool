@@ -55,30 +55,38 @@
         .list-item:last-child { border-bottom: none; }
         
         /* Column widths - consistent across header and rows */
+        /* Column 1: Size */
         .section-header span:nth-child(1),
         .section-stats span:nth-child(1),
         .list-item span:nth-child(1) {
+            width: 80px;
+            flex-shrink: 0;
+            text-align: right;
+            font-family: monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        /* Column 2: Page Name */
+        .section-header span:nth-child(2),
+        .section-stats span:nth-child(2),
+        .list-item span:nth-child(2) {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        /* Column 3: isOnCommons */
+        .section-header span:nth-child(3),
+        .section-stats span:nth-child(3),
+        .list-item span:nth-child(3) {
             width: 100px;
             flex-shrink: 0;
             text-align: center;
         }
         
-        .section-header span:nth-child(2),
-        .section-stats span:nth-child(2),
-        .list-item span:nth-child(2) {
-            width: 80px;
-            flex-shrink: 0;
-            text-align: right;
-            font-family: monospace;
-        }
-        
-        .section-header span:nth-child(3),
-        .section-stats span:nth-child(3),
-        .list-item span:nth-child(3) {
-            flex: 1;
-            min-width: 0;
-        }
-        
+        /* Column 4: Status */
         .section-header span:nth-child(4),
         .section-stats span:nth-child(4),
         .list-item span:nth-child(4) {
@@ -175,6 +183,34 @@
     <script src="js/translations.js"></script>
 
     <script>
+        // Load rename rules from replaces.json
+        let renameRules = [];
+        fetch('./json/replaces.json')
+            .then(response => response.json())
+            .then(data => {
+                renameRules = data.rules.filter(rule => rule.type === 'rename');
+                console.log(`✅ Loaded ${renameRules.length} rename rules from replaces.json`);
+            })
+            .catch(error => {
+                console.error('❌ Error loading replaces.json:', error);
+            });
+
+        // Apply rename transformations to a page title
+        function applyRenameTransformations(pageTitle) {
+            let transformed = pageTitle;
+            
+            for (const rule of renameRules) {
+                try {
+                    const regex = new RegExp(rule.match, 'g');
+                    transformed = transformed.replace(regex, rule.replace);
+                } catch (error) {
+                    console.error(`Error applying rename rule:`, rule, error);
+                }
+            }
+            
+            return transformed;
+        }
+
         // Page existence checker with caching and throttling
         const PageExistenceChecker = {
             cache: new Map(),
@@ -238,11 +274,17 @@
             
             // Query the MediaWiki API
             async queryAPI(titles) {
+                // Apply rename transformations to all titles
+                const transformedTitles = titles.map(title => applyRenameTransformations(title));
+                
+                console.log('Original titles:', titles);
+                console.log('Transformed titles:', transformedTitles);
+                
                 const url = new URL('https://commons.wikimedia.org/w/api.php');
                 url.searchParams.set('action', 'query');
                 url.searchParams.set('format', 'json');
                 url.searchParams.set('origin', '*');
-                url.searchParams.set('titles', titles.join('|'));
+                url.searchParams.set('titles', transformedTitles.join('|'));
                 url.searchParams.set('prop', 'info');
                 
                 const response = await fetch(url);
@@ -251,10 +293,17 @@
                 const results = {};
                 
                 if (data.query && data.query.pages) {
+                    // Map results back to original titles
+                    const transformedToOriginal = {};
+                    titles.forEach((original, index) => {
+                        transformedToOriginal[transformedTitles[index]] = original;
+                    });
+                    
                     for (const pageId in data.query.pages) {
                         const page = data.query.pages[pageId];
+                        const originalTitle = transformedToOriginal[page.title] || page.title;
                         // Page exists if pageId is not negative
-                        results[page.title] = parseInt(pageId) > 0;
+                        results[originalTitle] = parseInt(pageId) > 0;
                     }
                 }
                 
@@ -443,27 +492,36 @@
             return `
                 <div class="section" id="${sectionId}">
                     <div class="section-header">
-                        <span class="isOnCommons col-title">
-                            <button class="check-existence-btn" data-section="${sectionId}">
-                                <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/>
-                            </button>
-                        </span>
                         <span class="col-title">Size</span>
                         <span class="pageName col-title">${title}</span>
+                        <span class="isOnCommons col-title">
+                            <button class="check-existence-btn" data-section="${sectionId}">
+                                <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/>?
+                            </button>
+                        </span>
                         <span class="col-title">Status</span>
                     </div>
                     <div class="section-stats">
                         <span></span>
-                        <span></span>
                         <span>Original: ${originalCount} | Filtered: ${removedCount} | Kept: ${filteredCount}</span>
+                        <span></span>
                         <span style="opacity: 0.8;">
                             ${removalPercentage}% out
                         </span>
                     </div>
                     <div class="list-container">
                         ${filteredItems.length > 0 
-                            ? filteredItems.map(item => `<div class="list-item"><span class="isOnCommons" data-page="${item}">-</span><span class="pageSize" data-page="${item}">-</span><span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span><span></span></div>`).join('')
-                            : '<div class="list-item" style="font-style: italic; color: #666;"><span></span><span></span><span>No items remaining after filtering</span><span></span></div>'
+                            ? filteredItems.map(item => {
+                                const transformedTitle = applyRenameTransformations(item);
+                                return `
+                                <div class="list-item" data-page-lingualibre="${item}" data-page-commons="${transformedTitle}">
+                                    <span class="pageSize">-</span>
+                                    <span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span>
+                                    <span class="isOnCommons">-</span>
+                                    <span></span>
+                                </div>`;
+                            }).join('')
+                            : '<div class="list-item" style="font-style: italic; color: #666;"><span></span><span>No items remaining after filtering</span><span></span><span></span></div>'
                         }
                     </div>
                 </div>
@@ -476,39 +534,44 @@
             if (!section) return;
             
             const button = section.querySelector('.check-existence-btn');
-            const existenceIndicators = section.querySelectorAll('.isOnCommons[data-page]');
-            const sizeIndicators = section.querySelectorAll('.pageSize[data-page]');
+            const listItems = section.querySelectorAll('.list-item[data-page-lingualibre]');
             
-            if (!existenceIndicators.length) return;
+            if (!listItems.length) return;
             
             // Update button state
             button.disabled = true;
-            button.innerHTML = '<img src="./assets/commons.svg" alt="Checking..." style="width:16px;height:16px; animation: spin 1s linear infinite;"/>';
+            var commonsButton = `<img src="./assets/commons.svg" alt="Checking..." style="width:16px;height:16px;"/><strong>?</strong>`;
+            button.innerHTML = commonsButton;
             button.style.cursor = 'wait';
             
-            const totalCount = existenceIndicators.length;
+            const totalCount = listItems.length;
             let checkedCount = 0;
             
             // Set all to pending immediately
-            existenceIndicators.forEach(indicator => {
-                indicator.textContent = '⏳';
-            });
-            sizeIndicators.forEach(indicator => {
-                indicator.textContent = '⏳';
+            listItems.forEach(listItem => {
+                const existenceIndicator = listItem.querySelector('.isOnCommons');
+                const sizeIndicator = listItem.querySelector('.pageSize');
+                if (existenceIndicator) existenceIndicator.textContent = '⏳';
+                if (sizeIndicator) sizeIndicator.textContent = '⏳';
             });
             
             // Queue all checks at once (this triggers batch processing)
-            const checkPromises = Array.from(existenceIndicators).map(async (existenceIndicator, index) => {
-                const pageTitle = existenceIndicator.getAttribute('data-page');
-                if (pageTitle) {
-                    // Check both existence and size in parallel
+            const checkPromises = Array.from(listItems).map(async (listItem) => {
+                const pageTitle = listItem.getAttribute('data-page-lingualibre');
+                const commonsTitle = listItem.getAttribute('data-page-commons');
+                
+                if (pageTitle && commonsTitle) {
+                    const existenceIndicator = listItem.querySelector('.isOnCommons');
+                    const sizeIndicator = listItem.querySelector('.pageSize');
+                    
+                    // Check Commons existence with transformed title, and LinguaLibre size with original title
                     const [exists, size] = await Promise.all([
-                        PageExistenceChecker.check(pageTitle),
+                        PageExistenceChecker.check(pageTitle), // This will use transformed title internally
                         PageSizeChecker.check(pageTitle)
                     ]);
                     
-                    existenceIndicator.textContent = exists ? '✅' : '❌';
-                    sizeIndicators[index].textContent = PageSizeChecker.formatSize(size);
+                    if (existenceIndicator) existenceIndicator.textContent = exists ? '✅' : '❌';
+                    if (sizeIndicator) sizeIndicator.textContent = PageSizeChecker.formatSize(size);
                     
                     checkedCount++;
                     button.textContent = `${checkedCount}/${totalCount}`;
@@ -519,7 +582,7 @@
             await Promise.all(checkPromises);
             
             // Update button to show completion
-            button.textContent = '✓ Done';
+            button.innerHTML = commonsButton; 
             button.style.background = '#28a745';
             button.style.color = 'white';
             button.style.borderColor = '#28a745';
@@ -527,14 +590,19 @@
         
         // Update existence indicators asynchronously
         async function updateExistenceIndicators() {
-            const indicators = document.querySelectorAll('.isOnCommons');
+            const listItems = document.querySelectorAll('.list-item[data-page-lingualibre]');
             
-            for (const indicator of indicators) {
-                const pageTitle = indicator.getAttribute('data-page');
-                if (pageTitle) {
-                    // Check existence (this will use cache or queue the request)
-                    const exists = await PageExistenceChecker.check(pageTitle);
-                    indicator.textContent = exists ? '✅' : '❌';
+            for (const listItem of listItems) {
+                const pageTitle = listItem.getAttribute('data-page-lingualibre');
+                const commonsTitle = listItem.getAttribute('data-page-commons');
+                
+                if (pageTitle && commonsTitle) {
+                    const indicator = listItem.querySelector('.isOnCommons');
+                    if (indicator) {
+                        // Check existence (this will use cache or queue the request)
+                        const exists = await PageExistenceChecker.check(pageTitle);
+                        indicator.textContent = exists ? '✅' : '❌';
+                    }
                 }
             }
         }

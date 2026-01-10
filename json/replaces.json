@@ -1,20 +1,32 @@
 { 
     "rules": [
+        { "type":"content", "match": "{{#[Ss][Uu][Bb][Tt][Ii][Tt][Ll][Ee]:([\\s\\S]+?)}}", "replace": "$1" },
         { "type":"content", "match": "\\[\\[:?[Cc]:", "replace": "[[" },
         { "type":"content", "match": "\\[\\[:?[Cc]ommons:", "replace": "[[" },
         { "type":"content", "match": "\\[\\[Special:RecordWizard", "replace": "[[:lingualibre:Special:RecordWizard" },
         { "type":"content", "match": "{\\|[\\s\\S]*?<syntaxhighlight lang=\"sparql\">([\\s\\S]+?)</syntaxhighlight>[\\s\\S]*?\\|}", "replace": "{{SPARQL|query=$1}}" },
+        { "type":"content", "match": "&lt;query[^&]*?&gt;([\\s\\S]+?)&lt;/query&gt;", "replace": "{{SPARQL|query=$1}}" },
+        { "type":"content", "match": "<query[^>]*?>([\\s\\S]+?)</query>", "replace": "{{SPARQL|query=$1}}" },
         { "type":"content", "match": "\\[https://lingualibre\\.org/index\\.php\\?title=(.+?)&amp;oldid=\\d+ (.+?)\\]", "replace": "[[$1|$2]]" },
-        { "type":"content", "match": "\\[https://commons\\.org/w/index\\.php\\?title=(.+?)&amp;oldid=\\d+ (.+?)\\]", "replace": "[[$1|$2]]" },
+        { "type":"content", "match": "\\[https://commons\\.wikimedia\\.org/w/index\\.php\\?title=(.+?)&amp;oldid=\\d+ (.+?)\\]", "replace": "[[$1|$2]]" },
+        { "type":"content", "match": "\\[https://meta\\.wikimedia\\.org/wiki/(.+?)\\s+(.+?)\\]", "replace": "[[:meta:$1|$2]]" },
+        { "type":"content", "match": "\\:\\[:meta:(.+?)\\s+(.+?)\\] ", "replace": "[[:meta:$1|$2]]" },
         { "type":"content", "match": "^[\\*#]?\\s*([^\\s\\{\\[\\(<#|].*?)\\s*$", "replace": "# $1", "requires": "list", "process": "lineByLine" },
         { "type":"content", "match": "(<text[^>]*>)", "replace": "$1{{Lingua Libre list\\n|code=\\n|quality=\\n|method=\\n|items=word\\n|dictionary=false\\n}}\\n\\n", "requires": "list" },
+        { "type":"content", "match": "Special:MyLanguage/", "replace": "" },
+        { "type":"content", "match": "Category:Lingua Libre:Help", "replace": "Category:Lingua Libre help" },
         { "type":"rename", "match": "Category:Tool", "replace": "Category:Lingua Libre tool" },
+        { "type":"rename", "match": "Category:Events", "replace": "Category:Lingua Libre events" },
         { "type":"rename", "match": "Category:Speakers in", "replace": "Category:Voice contributors in" },
+        { "type":"rename", "match": "Category:Speakers by", "replace": "Category:Voice contributors by" },
         { "type":"content", "match": "=Speakers in", "replace": "=Voice contributors in" },
         { "type":"content", "match": "Speaker of the ", "replace": "Voice contributor of the " },
+        { "type":"content", "match": "olapse", "replace": "ollapse" },
         { "type":"rename", "match": "User:", "replace": "User:" },
-        { "type":"rename", "match": "LinguaLibre:", "replace": "Commons:Lingua Libre/" },
-        { "type":"rename", "match": "Lingua Libre:Help", "replace": "Help:Lingua Libre" },
+        { "type":"rename", "match": "LL:", "replace": "Commons:Lingua Libre/" },
+        { "type":"rename", "match": "\\|Lingua[lL]ibre:", "replace": "|Lingua Libre/" },
+        { "type":"rename", "match": "Lingua[lL]ibre:", "replace": "Commons:Lingua Libre/" },
+        { "type":"rename", "match": "LinguaLibre:Help", "replace": "Help:Lingua Libre" },
         { "type":"rename", "match": "Help:", "replace": "Help:Lingua Libre/" },
         { "type":"rename", "match": "List:Teochew ", "replace": "List:Teochew/Teochew-" },  
         { "type":"rename", "match": "List:CY/ ", "replace": "List:Cym" },  
@@ -22,5 +34,6 @@
         { "type":"rename", "match": "Translations:", "replace": "Translations:" },
         { "type":"rename", "match": "Template:", "replace": "Template:" },
         { "type":"rename", "match": "Welcome/", "replace": "Welcome-LL/" }
+
     ]
 }
