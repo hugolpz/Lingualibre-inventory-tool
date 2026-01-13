@@ -59,7 +59,7 @@
         .section-header span:nth-child(1),
         .section-stats span:nth-child(1),
         .list-item span:nth-child(1) {
-            width: 80px;
+            flex: 1;
             flex-shrink: 0;
             text-align: right;
             font-family: monospace;
@@ -72,8 +72,11 @@
         /* Column 2: Page Name */
         .section-header span:nth-child(2),
         .section-stats span:nth-child(2),
-        .list-item span:nth-child(2) {
-            flex: 1;
+        .list-item span:nth-child(2),
+        .section-header span:nth-child(4),
+        .section-stats span:nth-child(4),
+        .list-item span:nth-child(4) {
+            flex: 5;
             min-width: 0;
         }
         
@@ -81,19 +84,11 @@
         .section-header span:nth-child(3),
         .section-stats span:nth-child(3),
         .list-item span:nth-child(3) {
-            width: 100px;
+            flex: 1;
             flex-shrink: 0;
             text-align: center;
         }
         
-        /* Column 4: Status */
-        .section-header span:nth-child(4),
-        .section-stats span:nth-child(4),
-        .list-item span:nth-child(4) {
-            width: 120px;
-            flex-shrink: 0;
-            text-align: right;
-        }
         
         /* Specific styling for header columns */
         .col-title {
@@ -504,10 +499,10 @@
                     <div class="section-stats">
                         <span></span>
                         <span>Original: ${originalCount} | Filtered: ${removedCount} | Kept: ${filteredCount}</span>
-                        <span></span>
                         <span style="opacity: 0.8;">
                             ${removalPercentage}% out
                         </span>
+                        <span></span>
                     </div>
                     <div class="list-container">
                         ${filteredItems.length > 0 
@@ -518,7 +513,7 @@
                                     <span class="pageSize">-</span>
                                     <span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span>
                                     <span class="isOnCommons">-</span>
-                                    <span></span>
+                                    <span class="pageTitle"><a href="https://commons.wikimedia.org/wiki/${transformedTitle}">${transformedTitle}</a></span>
                                 </div>`;
                             }).join('')
                             : '<div class="list-item" style="font-style: italic; color: #666;"><span></span><span>No items remaining after filtering</span><span></span><span></span></div>'

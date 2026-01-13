@@ -22,6 +22,7 @@
         { "type":"rename", "match": "Lingua[lL]ibre:", "replace": "Commons:Lingua Libre/" },
         { "type":"rename", "match": "LinguaLibre:Help", "replace": "Help:Lingua Libre" },
         { "type":"rename", "match": "Help:", "replace": "Help:Lingua Libre/" },
+        { "type":"rename", "match": "Help:Main", "replace": "Help:Lingua Libre" },
         { "type":"rename", "match": "List:Teochew ", "replace": "List:Teochew/Teochew-" },  
         { "type":"rename", "match": "List:CY/ ", "replace": "List:Cym" },  
         { "type":"rename", "match": "List:", "replace": "Commons:Lingua Libre/List/" },      
@@ -115,25 +116,25 @@
         }
 
         const newPageContent = `
-<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
-  <div class="mw-parser-output">
-    <div class="redirectMsg">
-      <p><b>This page now redirects to Wikimedia Commons:</b></p>
-      <ul class="redirectText">
-        <li><a href="https://commons.wikimedia.org/wiki/${encodeURIComponent(newPageTitle)}" title="${pageTitle}">:c:${newPageTitle}</a></li>
-      </ul>
-      <small>See also the <a href="https://commons.wikimedia.org/wiki/Commons:Lingua_Libre" title="Lingua Libre:Migration to Wikimedia Commons">migration announcement</a> for more details.</small>
+<div class="" style="width: auto; background-color:#3366CCFF40; border:2px solid #3366CCFF; padding: 4px 15px 2px 15px; margin: 0.5em auto; text-align:left; max-width:60em;">
+    <div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+    <div class="mw-parser-output">
+        <div class="redirectMsg">
+        <ul class="redirectText" style="list-style: none";>
+            <li style="padding-left: 47px; background: transparent url(/resources/src/mediawiki.action/images/redirect-ltr.png) bottom left no-repeat;background-image: url('/resources/src/mediawiki.action/images/redirect-ltr.png'); background-image: linear-gradient(transparent,transparent),url(/resources/src/mediawiki.action/images/redirect-ltr.svg); display:inline;"><a href="https://commons.wikimedia.org/wiki/${encodeURIComponent(newPageTitle)}" title="${pageTitle}">:c:${newPageTitle}</a>. <small>For details, see our <a href="https://commons.wikimedia.org/wiki/Commons:Lingua_Libre" title="Lingua Libre:Migration to Wikimedia Commons">migration announcement</a> (English).</small>
+        </ul>
+        </div>
     </div>
-  </div>
+    </div>
 </div>`;
 
         contentElement.outerHTML = newPageContent;
-        // Hide the edit button
+        /* Hide the edit button */
         const editButton = document.getElementById('ca-edit');
         if (editButton) {
             editButton.style.display = 'none';
         }
-        
+        /**/
         console.log(`migratedToCommons.js: Redirected "${pageTitle}" to "${newPageTitle}"`);
     }
 
@@ -157,7 +158,7 @@
         const newPageTitle = transformPageTitle(pageTitle);
         
         // If transformation was applied, check if page exists on Commons
-        if (newPageTitle) {
+        if (newPageTitle) { // <------------------------------ could be removed
             const exists = await pageExistsOnCommons(newPageTitle);
             
             if (exists) {
@@ -165,6 +166,11 @@
             } else {
                 console.log(`migratedToCommons.js: Page "${newPageTitle}" does not exist on Commons yet`);
             }
+        }
+        // Page doesn't exist on Commons yet, show original content
+        const contentElement = document.getElementById('mw-content-text');
+        if (contentElement) {
+            contentElement.style.display = 'block';
         }
     }
 

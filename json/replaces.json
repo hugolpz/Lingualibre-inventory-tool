@@ -31,9 +31,10 @@
         { "type":"rename", "match": "List:Teochew ", "replace": "List:Teochew/Teochew-" },  
         { "type":"rename", "match": "List:CY/ ", "replace": "List:Cym" },  
         { "type":"rename", "match": "List:", "replace": "Commons:Lingua Libre/List/" },      
+        { "type":"rename", "match": "Translations:(?!.*\\/\\d+)(.+)", "replace": "$1" },
         { "type":"rename", "match": "Translations:", "replace": "Translations:" },
+        { "type":"rename", "match": "Translations:Help:Lingua Libre/Main", "replace": "Translations:Help:Lingua Libre" },
         { "type":"rename", "match": "Template:", "replace": "Template:" },
         { "type":"rename", "match": "Welcome/", "replace": "Welcome-LL/" }
-
     ]
 }
