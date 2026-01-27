@@ -1,11 +1,11 @@
 [
-    { "id": 2, "title": "User:*", "quantity": 0, "status": "✅✅ Migrated", "pages": [] },
-    { "id": 4, "title": "Lingualibre:*", "quantity": 0, "status": "✅ To migrate", "pages": [] },
-    { "id": 8, "title": "MediaWiki:*", "quantity": 0, "status": "❌ Discard", "pages": [] },
-    { "id": 10, "title": "Template:*", "quantity": 0, "status": "🧹 To clean up", "pages": [] },
-    { "id": 12, "title": "Help:*", "quantity": 0, "status": "✅ To migrate", "pages": [] },
-    { "id": 14, "title": "Category:*", "quantity": 0, "status": "🧹 To clean up", "pages": [] },
-    { "id": 142, "title": "List:*", "quantity": 0, "status": "🧹 To clean up", "pages": [] },
-    { "id": 1198, "title": "Translations:*", "quantity": 0, "status": "✅ To migrate", "pages": [] },
-    { "id": 2300, "title": "Gadget:*", "quantity": 0, "status": "❌ Discard", "pages": [] }
+    { "id": 2, "title": "User:*", "quantity": 0, "initial": "✅ Ready (subpages only)", "status": "✅ Migrated", "pages": [] },
+    { "id": 4, "title": "Lingualibre:*", "quantity": 0, "initial": "✅ Ready (+rename)", "status": "✅ Migrated", "pages": [] },
+    { "id": 8, "title": "MediaWiki:*", "quantity": 0, "initial": "❌ To discard", "status": "❌ Discard", "pages": [] },
+    { "id": 10, "title": "Template:*", "quantity": 0, "initial": "🧹 To clean up", "status": "✅ Migrated", "pages": [] },
+    { "id": 12, "title": "Help:*", "quantity": 0, "initial": "✅ Ready (+rename)", "status": "✅ Migrated", "pages": [] },
+    { "id": 14, "title": "Category:*", "quantity": 0, "initial": "🧹 To clean up", "status": "✅ Migrated", "pages": [] },
+    { "id": 142, "title": "List:*", "quantity": 0, "initial": "🧹 To clean up", "status": "✅ Migrated", "pages": [] },
+    { "id": 1198, "title": "Translations:*", "quantity": 0, "initial": "✅ Ready (+rename)", "status": "✅ Migrated", "pages": [] },
+    { "id": 2300, "title": "Gadget:*", "quantity": 0, "initial": "❌ To discard", "status": "❌ Discard", "pages": [] }
 ]

@@ -246,10 +246,11 @@
             
             row.innerHTML = `
                 <td>${ns.id}</td>
-                <td style="font-family: monospace;">${ns.title}</td>
+                <td style="text-align: right; font-family: monospace;">${ns.title}</td>
                 <td style="text-align: right; font-weight: bold;" class="${statusClass}">${statusIcon+' '+ ns.quantity.toLocaleString()}</td>
                 <td style="text-align: right; color: #28a745; font-weight: bold;">${keepCount}</td>
-                <td  style="text-align: center;">${status}</td>
+                <td style="text-align: left;">${ns.initial || '-'}</td>
+                <td style="text-align: left;">${status}</td>
             `;
             tableBody.appendChild(row);
         });
@@ -436,11 +437,12 @@
             <table id="ll-namespace-table">
                 <thead>
                     <tr>
-                        <th style="text-align:center;">NS</th>
-                        <th style="text-align:center;">Prefix</th>
-                        <th style="text-align:right;">API count</th>
-                        <th style="text-align:right;">Keep count</th>
-                        <th style="text-align:center;">Approach</th>
+                        <th style="text-align:center;">NS code</th>
+                        <th style="text-align:center;">NS prefix</th>
+                        <th style="text-align:right;">Existing pages (API)</th>
+                        <th style="text-align:right;">Selected pages</th>
+                        <th style="text-align:center;">Initial</th>
+                        <th style="text-align:center;">Status</th>
                     </tr>
                 </thead>
                 <tbody id="ll-namespace-table-body">
