@@ -139,7 +139,7 @@
         
         <div style="text-align: center; margin-bottom: 20px;">
             <button id="open-namespace-manager" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em;">
-                📊 Manage Namespace Data
+                📊 Refresh data here
             </button>
         </div>
         
@@ -177,6 +177,7 @@
     <script src="js/list.js"></script>
     <script src="js/category.js"></script>
     <script src="js/translations.js"></script>
+    <script src="js/mediawiki.js"></script>
 
     <script>
         // Page existence checker with caching and throttling
@@ -399,6 +400,7 @@
             { ns: 'template', title: 'Template:*' },
             { ns: 'translations', title: 'Translations:*' },
             { ns: 'translations_root', title: 'Translations:* roots' },
+            { ns: 'mediawiki', title: 'MediaWiki:*' },
         ];
 
         // DRY: Function to prepare root namespaces from their full counterparts
@@ -471,9 +473,9 @@
                     </div>
                     <div class="section-stats">
                         <span></span>
-                        <span>Original: ${originalCount} | Filtered: ${removedCount} | Kept: ${filteredCount}</span>
-                        <span style="opacity: 0.8;">
-                            ${removalPercentage}% out
+                        <span>Original: ${originalCount} | Filtered: ${removedCount} | Kept: ${filteredCount} (${ Math.round((100-removalPercentage)*100)/100 }%)</span>
+                        <span>
+                            
                         </span>
                         <span></span>
                     </div>
