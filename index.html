@@ -168,6 +168,7 @@
     </div>
 
     <!-- Load all JS files -->
+    <script src="js/replaces.js"></script>
     <script src="js/listing.js"></script>
     <script src="js/user.js"></script>
     <script src="js/help.js"></script>
@@ -178,34 +179,6 @@
     <script src="js/translations.js"></script>
 
     <script>
-        // Load rename rules from replaces.json
-        let renameRules = [];
-        fetch('./json/replaces.json')
-            .then(response => response.json())
-            .then(data => {
-                renameRules = data.rules.filter(rule => rule.type === 'rename');
-                console.log(`✅ Loaded ${renameRules.length} rename rules from replaces.json`);
-            })
-            .catch(error => {
-                console.error('❌ Error loading replaces.json:', error);
-            });
-
-        // Apply rename transformations to a page title
-        function applyRenameTransformations(pageTitle) {
-            let transformed = pageTitle;
-            
-            for (const rule of renameRules) {
-                try {
-                    const regex = new RegExp(rule.match, 'g');
-                    transformed = transformed.replace(regex, rule.replace);
-                } catch (error) {
-                    console.error(`Error applying rename rule:`, rule, error);
-                }
-            }
-            
-            return transformed;
-        }
-
         // Page existence checker with caching and throttling
         const PageExistenceChecker = {
             cache: new Map(),
@@ -491,7 +464,7 @@
                         <span class="pageName col-title">${title} on Lingualibre.org</span>
                         <span class="isOnCommons col-title">
                             <button class="check-existence-btn" data-section="${sectionId}">
-                                <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/>?
+                                <img src="./assets/commons.svg" alt="Check WC" style="width:16px;height:16px;"/> Verify
                             </button>
                         </span>
                         <span class="col-title">New title on Commons</span>

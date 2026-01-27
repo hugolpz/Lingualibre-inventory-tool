@@ -1,4 +1,6 @@
-{ 
+// replaces.js - Replacement rules for page transformations
+
+const replaces = { 
     "rules": [
         { "type":"content", "match": "{{#[Ss][Uu][Bb][Tt][Ii][Tt][Ll][Ee]:([\\s\\S]+?)}}", "replace": "$1" },
         { "type":"content", "match": "\\[\\[:?[Cc]:", "replace": "[[" },
@@ -38,4 +40,39 @@
         { "type":"rename", "match": "Template:", "replace": "Template:" },
         { "type":"rename", "match": "Welcome/", "replace": "Welcome-LL/" }
     ]
+};
+
+// Filter rename rules
+const renameRules = replaces.rules.filter(rule => rule.type === 'rename');
+
+// Apply rename transformations to a page title
+function applyRenameTransformations(pageTitle) {
+    let transformed = pageTitle;
+    
+    for (const rule of renameRules) {
+        try {
+            const regex = new RegExp(rule.match, 'g');
+            transformed = transformed.replace(regex, rule.replace);
+        } catch (error) {
+            console.error(`Error applying rename rule:`, rule, error);
+        }
+    }
+    
+    return transformed;
+}
+
+// Export for use in other scripts
+if (typeof window !== 'undefined') {
+    // Browser environment
+    window.replaces = replaces;
+    window.renameRules = renameRules;
+    window.applyRenameTransformations = applyRenameTransformations;
+    console.log(`✅ Loaded ${renameRules.length} rename rules from replaces.js`);
+} else if (typeof module !== 'undefined' && module.exports) {
+    // Node.js environment
+    module.exports = {
+        replaces,
+        renameRules,
+        applyRenameTransformations
+    };
 }

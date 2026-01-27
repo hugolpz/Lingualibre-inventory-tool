@@ -3,7 +3,7 @@
 //
 // DESCRIPTION:
 //   This script applies replacements to all ./xml/*.xml files. It processes the files based on the replacement
-//   rules defined in json/replaces.json, and it outputs cleaned copies in folder ./output .
+//   rules defined in js/replaces.js, and it outputs cleaned copies in folder ./output .
 //
 // USAGE:
 //   node clean-xml.js [OPTIONS]
@@ -25,11 +25,11 @@
 //   node clean-xml.js --activate=list  # Activate rules that require 'list'
 //
 // REPLACEMENTS APPLIED:
-//   See json/replaces.json for complete list of transformation rules.
+//   See js/replaces.js for complete list of transformation rules.
 // 
 // REQUIREMENTS:
 //   - Node.js (ES6+)
-//   - json/replaces.json file with transformation rules
+//   - js/replaces.js file with transformation rules
 //   - XML files in ./xml directory (not required for --test mode)
 //
 // OUTPUT:
@@ -99,13 +99,15 @@ for (const arg of args) {
     }
 }
 
-// Load replacement rules
-const rulesPath = path.join(__dirname, 'json', 'replaces.json');
+// Load replacement rules from js/replaces.js
+const rulesPath = path.join(__dirname, 'js', 'replaces.js');
 let rules;
 
 try {
-    const rulesContent = fs.readFileSync(rulesPath, 'utf8');
-    rules = JSON.parse(rulesContent).rules;
+    // Load the module
+    const replacesModule = require(rulesPath);
+    rules = replacesModule.replaces.rules;
+    console.log(`✅ Loaded ${rules.length} rules from js/replaces.js`);
 } catch (error) {
     console.error(`ERROR: Failed to load ${rulesPath}`);
     console.error(error.message);

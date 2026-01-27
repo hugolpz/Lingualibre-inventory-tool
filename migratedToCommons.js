@@ -10,7 +10,7 @@
 (function() {
     'use strict';
 
-    // Transformation rules from json/replaces.json (type: "rename" only)
+    // Transformation rules from js/replaces.json (type: "rename" only)
     const transformRules = [        
         { "type":"rename", "match": "Category:Tool", "replace": "Category:Lingua Libre tool" },
         { "type":"rename", "match": "Category:Events", "replace": "Category:Lingua Libre events" },
