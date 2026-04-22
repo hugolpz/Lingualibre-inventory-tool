@@ -19,6 +19,7 @@ The MediaWiki migration user rights and tools come with certain limitations. Bec
 * **Other local cleanups:** Dozens of wiki pages, templates, and categories were no longer relevant post-migration and were therefore deleted on LinguaLibre.org or excluded from the migration.
 
 ## See also
+* [2025_Wikipages_migration (Report to community)](https://meta.wikimedia.org/wiki/Lingua_Libre/Supports#2025_Wikipages_migration)
 * [Commons:Lingua Libre](https://commons.wikimedia.org/wiki/Commons:Lingua_Libre) – New home page
 * [Commons:Lingua Libre/List](https://commons.wikimedia.org/wiki/Commons:Lingua_Libre/List) – New list page
 * [Help:Lingua Libre](https://commons.wikimedia.org/wiki/Help:Lingua_Libre) – New help and documentation page
