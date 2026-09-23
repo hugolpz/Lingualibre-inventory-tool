@@ -126,7 +126,12 @@
     
     // Load namespaces.json
     fetch('./json/namespaces.json')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} while loading ${response.url}`);
+            }
+            return response.json();
+        })
         .then(data => {
             namespaces = data;
             namespacesLoaded = true;
@@ -134,7 +139,7 @@
         })
         .catch(error => {
             console.error('❌ Error loading namespaces.json:', error);
-            alert('Failed to load namespaces.json. Please check the file exists and is valid JSON.');
+            alert(`Failed to load namespaces.json: ${error.message}`);
         });
 
     // Fetch pages in namespace

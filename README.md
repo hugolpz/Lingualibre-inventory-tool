@@ -1,6 +1,8 @@
 ## LinguaLibre Inventory Tool
 The [**LinguaLibre Inventory Tool**](https://hugolpz.github.io/Lingualibre-inventory-tool/) tracks all wiki pages that required migration from LinguaLibre.org to Wikimedia Commons.
 
+For local development, run `npm start` and open `http://localhost:8000/` in a browser. The Node server is required so browser requests for `json/namespaces.json` work correctly. The tool is built with [Vue.js](https://vuejs.org/) and uses [Bootstrap](https://getbootstrap.com/) for styling.
+
 ## Migration
 The MediaWiki migration user rights and tools come with certain limitations. Because the content is complex, we adapted our process as best as possible. Overall, the migration proceeded as follows:
 * Approximately 3,000 wiki pages have been migrated (about 400 pages and 2,500 micro-translations).
