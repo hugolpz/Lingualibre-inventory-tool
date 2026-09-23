@@ -164,7 +164,7 @@ ORDER BY DESC (?audio)
 }}
 
 # Blabla</text>` : `<text bytes="37" sha1="ki0q0lz9v78h5i2lfxsuvb8lm5ur8c7" xml:space="preserve">Blabla</text>` },
-        { input: '[https://lingualibre.org/index.php?title=Special:RecordWizard&amp;oldid=123456 RecordWizard]', 
+        { input: '[https://archive.lingualibre.orgindex.php?title=Special:RecordWizard&amp;oldid=123456 RecordWizard]', 
             expects: '[[Special:RecordWizard|RecordWizard]]' },
         { input: '[https://commons.org/w/index.php?title=Commons:Lingua_Libre&amp;oldid=789 Lingua Libre]', 
             expects: '[[Commons:Lingua_Libre|Lingua Libre]]' },

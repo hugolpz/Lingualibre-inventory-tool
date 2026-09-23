@@ -4,7 +4,7 @@
 // @version      1.0
 // @description 1. Provides a button to open a modal ; 2. Fetch and display namespace statistics on Lingua Libre ; 3. Logs list of pagenames
 // @author       Yug
-// @match        https://lingualibre.org/wiki/*
+// @match        https://archive.lingualibre.orgwiki/*
 // ==/UserScript==
 
 (function() {
@@ -139,7 +139,7 @@
 
     // Fetch pages in namespace
     async function fetchPagesInNamespace(nsId, nsTitle, apcontinue = null, collectedPages = new Set()) {
-        const endpoint = "https://lingualibre.org/api.php";
+        const endpoint = "https://archive.lingualibre.org/api.php";
         const params = new URLSearchParams({
             action: "query",
             format: "json",

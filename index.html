@@ -342,7 +342,7 @@
             },
             
             async queryAPI(titles) {
-                const url = new URL('https://lingualibre.org/api.php');
+                const url = new URL('https://archive.lingualibre.org/api.php');
                 url.searchParams.set('action', 'query');
                 url.searchParams.set('format', 'json');
                 url.searchParams.set('origin', '*');
@@ -486,7 +486,7 @@
                                 return `
                                 <div class="list-item" data-page-lingualibre="${item}" data-page-commons="${transformedTitle}">
                                     <span class="pageSize">-</span>
-                                    <span class="pageTitle"><a href="https://lingualibre.org/wiki/${item}">${item}</a></span>
+                                    <span class="pageTitle"><a href="https://archive.lingualibre.orgwiki/${item}">${item}</a></span>
                                     <span class="isOnCommons">-</span>
                                     <span class="pageTitle"><a href="https://commons.wikimedia.org/wiki/${transformedTitle}">${transformedTitle}</a></span>
                                 </div>`;

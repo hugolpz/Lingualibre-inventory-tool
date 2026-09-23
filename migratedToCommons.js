@@ -3,7 +3,7 @@
 // @description  Redirects migrated Lingua Libre pages to their new location on Wikimedia Commons
 // @author       Yug
 // @version      1.0
-// @match        https://lingualibre.org/wiki/*
+// @match        https://archive.lingualibre.orgwiki/*
 // @grant        none
 // ==/UserScript==
 
