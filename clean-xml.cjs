@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// clean-xml.js - Apply replacements to XML files
+// clean-xml.cjs - Apply replacements to XML files
 //
 // DESCRIPTION:
 //   This script applies replacements to all ./xml/*.xml files. It processes the files based on the replacement
 //   rules defined in js/replaces.js, and it outputs cleaned copies in folder ./output .
 //
 // USAGE:
-//   node clean-xml.js [OPTIONS]
-//   ./clean-xml.js [OPTIONS]  (if executable)
+//   node clean-xml.cjs [OPTIONS]
+//   ./clean-xml.cjs [OPTIONS]  (if executable)
 //
 // OPTIONS:
 //   -h, --help           Show this help message
@@ -18,11 +18,11 @@
 //   --activate=<value>   Activate conditional rules (e.g., --activate=list)
 //
 // EXAMPLES:
-//   node clean-xml.js                  # Apply all replacements
-//   node clean-xml.js --test           # Run test suite
-//   node clean-xml.js --dry-run        # Preview changes without applying
-//   node clean-xml.js --quiet          # Run silently
-//   node clean-xml.js --activate=list  # Activate rules that require 'list'
+//   node clean-xml.cjs                  # Apply all replacements
+//   node clean-xml.cjs --test           # Run test suite
+//   node clean-xml.cjs --dry-run        # Preview changes without applying
+//   node clean-xml.cjs --quiet          # Run silently
+//   node clean-xml.cjs --activate=list  # Activate rules that require 'list'
 //
 // REPLACEMENTS APPLIED:
 //   See js/replaces.js for complete list of transformation rules.
