@@ -1,7 +1,16 @@
 ## LinguaLibre Inventory Tool
 The [**LinguaLibre Inventory Tool**](https://hugolpz.github.io/Lingualibre-inventory-tool/) tracks all wiki pages that required migration from LinguaLibre.org to Wikimedia Commons.
 
-For local development, run `npm start` and open `http://localhost:8000/` in a browser. The Node server is required so browser requests for `json/namespaces.json` work correctly. The tool is built with [Vue.js](https://vuejs.org/) and uses [Bootstrap](https://getbootstrap.com/) for styling.
+For local development, a web server is required for xhr queries to work :
+```bash
+npm install                       # Install dependencies
+npm start                         # Starts local server
+chrome http://localhost:8080      # Open in browser
+```
+
+## Librairies
+* [Vue.js](https://vuejs.org/)
+* [Bootstrap](https://getbootstrap.com/)
 
 ## Migration
 The MediaWiki migration user rights and tools come with certain limitations. Because the content is complex, we adapted our process as best as possible. Overall, the migration proceeded as follows:
@@ -12,13 +21,18 @@ The MediaWiki migration user rights and tools come with certain limitations. Bec
 
 ## Exclusions
 * **The following pages were excluded:**
-    * **Talk pages:** Aside from 5–10 pages, most only contained the `{{Welcome}}` template; migrating these would require user consent.
-    * **User pages:** These were excluded for the same reason, and to avoid conflicts with existing Commons User pages.
+    * **Talk pages:** Aside from 5–10 pages, most are `user_talk:{usename}` pages containing a single `{{Welcome}}` template; migrating these would require user consent.
+    * **User pages:** These were excluded for the same reason, and to avoid collision with existing Commons User pages.
     * **MediaWiki & Module namespaces:** Script imports are forbidden by Commons/Wikimedia rules, and the CSS was not relevant to the Commons environment.
-    * **Lingua Libre:Chat_room:** The XML archive is too large, causing the import tool to fail.
-    * **Help:SPARQL:** This content required the MediaWiki `Query` extension, which is not available on Commons. The content is also less relevant there and has been kept on LinguaLibre.org for now.
     * **Files:** These were already duplicates of files existing on Commons.
 * **Other local cleanups:** Dozens of wiki pages, templates, and categories were no longer relevant post-migration and were therefore deleted on LinguaLibre.org or excluded from the migration.
+
+## Export, Import, and Translation
+* **Special:Export** on archives.lingualibre.org
+* Cleaner scripts were used, see:
+    * `node clean-xml.cjs -help` - mass correct lingualibre.org wikipages into commons.wikimedia.org compatibles versions.
+    * `node slice-xml.cjs -help` - helped to split the XML file into smaller files for higher success rate on Special:Import.
+* **Special:Import** on commons.wikimedia.org. (Check [my userrights](https://meta.wikimedia.org/wiki/Special:CentralAuth/Yug) ; [request](https://meta.wikimedia.org/wiki/Steward_requests/Permissions/2026-07#User:Yug@commonswiki_(importer)) for Importer userrights).
 
 ## See also
 * [2025_Wikipages_migration (Report to community)](https://meta.wikimedia.org/wiki/Lingua_Libre/Supports#2025_Wikipages_migration)
