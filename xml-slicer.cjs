@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// slice-xml.cjs - Report XML statistics and optionally split revisions into files
+// xml-slicer.cjs - Report XML statistics and optionally split revisions into files
 //
 // USAGE:
-//   node slice-xml.cjs --path ./xml/{file}.xml
-//   node slice-xml.cjs --path ./xml/{file}.xml --slices 4
-//   node slice-xml.cjs --path ./xml/{file}.xml --max_size 50
+//   node xml-slicer.cjs --path ./xml/{file}.xml
+//   node xml-slicer.cjs --path ./xml/{file}.xml --slices 4
+//   node xml-slicer.cjs --path ./xml/{file}.xml --max_size 50
 //
 // OPTIONS:
 //   -h, --help       Show this help message

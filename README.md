@@ -27,12 +27,18 @@ The MediaWiki migration user rights and tools come with certain limitations. Bec
     * **Files:** These were already duplicates of files existing on Commons.
 * **Other local cleanups:** Dozens of wiki pages, templates, and categories were no longer relevant post-migration and were therefore deleted on LinguaLibre.org or excluded from the migration.
 
-## Export, Import, and Translation
+## Export, Import
 * **Special:Export** on archives.lingualibre.org
 * Cleaner scripts were used, see:
-    * `node clean-xml.cjs -help` - mass correct lingualibre.org wikipages into commons.wikimedia.org compatibles versions.
-    * `node slice-xml.cjs -help` - helped to split the XML file into smaller files for higher success rate on Special:Import.
-* **Special:Import** on commons.wikimedia.org. (Check [my userrights](https://meta.wikimedia.org/wiki/Special:CentralAuth/Yug) ; [request](https://meta.wikimedia.org/wiki/Steward_requests/Permissions/2026-07#User:Yug@commonswiki_(importer)) for Importer userrights).
+    * `node xml-cleaner.cjs -help` - mass-corrects lingualibre.org wikipages into commons.wikimedia.org compatibles versions. See js/replaces.js .
+    * `node xml-slicer.cjs -help` - splits the XML file into smaller files for higher success rate on Special:Import.
+* **Special:Import** on commons.wikimedia.org. 
+
+## Userrights
+* Check your userrights on all projects, ex: [Yug](https://commons.wikimedia.org/wiki/Special:CentralAuth/Yug).
+* **Importing xml files** requires Importer userrights: [request](https://meta.wikimedia.org/wiki/Steward_requests/Permissions/2026-07#User:Yug@commonswiki_(importer)).
+* **Importing translation subpages** required Translation userrights: [request](https://commons.wikimedia.org/wiki/Commons:Bureaucrats%27_noticeboard)
+* **Moving pages** requires Move userrights: [request](https://commons.wikimedia.org/wiki/Commons:Requests_for_rights#Filemover).
 
 ## See also
 * [2025_Wikipages_migration (Report to community)](https://meta.wikimedia.org/wiki/Lingua_Libre/Supports#2025_Wikipages_migration)
